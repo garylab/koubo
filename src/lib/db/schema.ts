@@ -88,8 +88,7 @@ export const script = pgTable(
     brandId: text("brand_id")
       .notNull()
       .references(() => brand.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    content: text("content").notNull(),
+    content: text("content").notNull().default(""),
     embedding: vector("embedding", { dimensions: 1536 }),
     embeddingUpdatedAt: timestamp("embedding_updated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),

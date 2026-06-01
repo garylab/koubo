@@ -20,7 +20,7 @@ export async function GET(
     const rows = await db
       .select({
         id: script.id,
-        title: script.title,
+        content: script.content,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
       })
@@ -41,14 +41,13 @@ export async function POST(
     const { brandId } = await params;
     const userId = await requireUserId();
     await requireBrand(brandId, userId);
-    const body = (await req.json()) as { title?: string; content?: string };
-    const title = body.title?.trim() || "未命名稿件";
+    const body = (await req.json().catch(() => ({}))) as { content?: string };
     const content = body.content ?? "";
 
     const db = getDb();
     const [row] = await db
       .insert(script)
-      .values({ brandId, title, content })
+      .values({ brandId, content })
       .returning();
 
     if (content.trim()) {

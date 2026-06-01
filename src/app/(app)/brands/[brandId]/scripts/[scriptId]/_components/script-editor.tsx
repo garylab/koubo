@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { deriveTitle } from "@/lib/script-title";
 
 type Props = {
   scriptId: string;
   brandId: string;
-  initialTitle: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
 };
@@ -14,18 +14,15 @@ type Props = {
 export function ScriptEditor({
   scriptId,
   brandId,
-  initialTitle,
   initialContent,
   embeddingUpdatedAt,
 }: Props) {
   const router = useRouter();
-  const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const [savedTitle, setSavedTitle] = useState(initialTitle);
-  const [savedContent, setSavedContent] = useState(initialContent);
+  const [saved, setSaved] = useState(initialContent);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
-  const dirty = title !== savedTitle || content !== savedContent;
+  const dirty = content !== saved;
 
   // AI panel state
   const [aiOpen, setAiOpen] = useState(false);
@@ -33,17 +30,22 @@ export function ScriptEditor({
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // Keep browser tab title in sync with derived script title
+  useEffect(() => {
+    const t = deriveTitle(content);
+    document.title = `${t} · Koubo`;
+  }, [content]);
+
   async function save() {
     setBusy("save");
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content }),
+      body: JSON.stringify({ content }),
     });
     setBusy(null);
     if (!res.ok) return;
-    setSavedTitle(title);
-    setSavedContent(content);
+    setSaved(content);
     router.refresh();
   }
 
@@ -101,13 +103,10 @@ export function ScriptEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="稿件标题"
-          className="flex-1 text-xl font-semibold bg-transparent outline-none border-b border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 py-1"
-        />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-lg font-medium truncate flex-1 min-w-0">
+          {deriveTitle(content)}
+        </h1>
         <div className="flex items-center gap-2 text-xs">
           <span className="text-neutral-500">
             {dirty ? "未保存" : embeddingUpdatedAt ? "已索引" : "已保存"}

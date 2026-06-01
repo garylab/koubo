@@ -4,6 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { brand, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
+import { deriveTitle } from "@/lib/script-title";
 import { CreateScriptButton } from "./_components/create-script-button";
 import { BrandActions } from "./_components/brand-actions";
 
@@ -27,7 +28,7 @@ export default async function BrandPage({
     db
       .select({
         id: script.id,
-        title: script.title,
+        content: script.content,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
       })
@@ -64,10 +65,10 @@ export default async function BrandPage({
                 href={`/brands/${b.id}/scripts/${s.id}`}
                 className="block rounded-md border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
               >
-                <div className="font-medium">{s.title}</div>
+                <div className="font-medium truncate">{deriveTitle(s.content)}</div>
                 <div className="text-xs text-neutral-500">
                   更新于 {new Date(s.updatedAt).toLocaleString("zh-CN")}
-                  {s.embeddingUpdatedAt ? " · 已生成 embedding" : " · 待生成 embedding"}
+                  {s.embeddingUpdatedAt ? " · 已索引" : " · 待索引"}
                 </div>
               </Link>
             </li>

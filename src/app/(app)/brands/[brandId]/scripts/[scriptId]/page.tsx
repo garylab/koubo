@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db/client";
 import { brand, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { listSimilarScripts } from "@/lib/similarity";
+import { deriveTitle } from "@/lib/script-title";
 import { ScriptEditor } from "./_components/script-editor";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,6 @@ export default async function ScriptPage({
       .select({
         id: script.id,
         brandId: script.brandId,
-        title: script.title,
         content: script.content,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
@@ -57,7 +57,6 @@ export default async function ScriptPage({
       <ScriptEditor
         scriptId={row.id}
         brandId={row.brandId}
-        initialTitle={row.title}
         initialContent={row.content}
         embeddingUpdatedAt={row.embeddingUpdatedAt?.toISOString() ?? null}
       />
@@ -78,7 +77,7 @@ export default async function ScriptPage({
                   href={`/brands/${s.brandId}/scripts/${s.id}`}
                   className="hover:underline"
                 >
-                  {s.title}
+                  {deriveTitle(s.content)}
                 </Link>
                 <span className="ml-2 text-xs text-neutral-500">
                   {(s.score * 100).toFixed(1)}%

@@ -30,24 +30,20 @@ export async function PATCH(
     const { id } = await params;
     const userId = await requireUserId();
     const { script: existing } = await requireScript(id, userId);
-    const body = (await req.json()) as { title?: string; content?: string };
+    const body = (await req.json()) as { content?: string };
 
-    const patch: Partial<typeof script.$inferInsert> = { updatedAt: new Date() };
-    if (typeof body.title === "string") patch.title = body.title.trim() || existing.title;
-    if (typeof body.content === "string") patch.content = body.content;
+    if (typeof body.content !== "string") {
+      return Response.json({ error: "content required" }, { status: 400 });
+    }
 
     const db = getDb();
     const [row] = await db
       .update(script)
-      .set(patch)
+      .set({ content: body.content, updatedAt: new Date() })
       .where(eq(script.id, id))
       .returning();
 
-    if (
-      typeof body.content === "string" &&
-      body.content !== existing.content &&
-      body.content.trim().length > 0
-    ) {
+    if (body.content !== existing.content && body.content.trim().length > 0) {
       defer(recomputeScriptEmbeddingAndSimilarity(id));
     }
 

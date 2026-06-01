@@ -60,7 +60,7 @@ export async function listSimilarScripts(scriptId: string, userId: string) {
   const rows = await db
     .select({
       id: script.id,
-      title: script.title,
+      content: script.content,
       score: scriptSimilarity.score,
       brandId: script.brandId,
     })

@@ -12,7 +12,7 @@ export function CreateScriptButton({ brandId }: { brandId: string }) {
     const res = await fetch(`/api/brands/${brandId}/scripts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "未命名稿件", content: "" }),
+      body: JSON.stringify({ content: "" }),
     });
     setBusy(false);
     if (!res.ok) return;
