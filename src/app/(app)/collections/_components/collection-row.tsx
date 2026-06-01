@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const REVEAL = 88;
+
+type Axis = null | "h" | "v";
 
 type Props = {
   id: string;
@@ -14,11 +18,58 @@ export function CollectionRow({ id, name, isDefault }: Props) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(name);
   const [busy, setBusy] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const startOffset = useRef(0);
+  const axis = useRef<Axis>(null);
+  const active = useRef(false);
+
+  function begin(clientX: number, clientY: number) {
+    if (editing || isDefault) return;
+    startX.current = clientX;
+    startY.current = clientY;
+    startOffset.current = dragX;
+    axis.current = null;
+    active.current = true;
+  }
+  function move(clientX: number, clientY: number) {
+    if (!active.current) return;
+    const dx = clientX - startX.current;
+    const dy = clientY - startY.current;
+    if (axis.current === null) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      axis.current = Math.abs(dx) > Math.abs(dy) ? "h" : "v";
+      if (axis.current === "v") {
+        active.current = false;
+        return;
+      }
+    }
+    if (axis.current !== "h") return;
+    const next = Math.max(-REVEAL, Math.min(0, startOffset.current + dx));
+    setDragX(next);
+  }
+  function end() {
+    const wasH = axis.current === "h";
+    active.current = false;
+    axis.current = null;
+    if (!wasH) return;
+    if (dragX < -REVEAL / 2) {
+      setDragX(-REVEAL);
+      setOpen(true);
+    } else {
+      setDragX(0);
+      setOpen(false);
+    }
+  }
 
   async function rename() {
     const next = val.trim();
     if (!next || next === name) {
       setEditing(false);
+      setVal(name);
       return;
     }
     setBusy(true);
@@ -40,64 +91,84 @@ export function CollectionRow({ id, name, isDefault }: Props) {
     if (res.ok) router.refresh();
   }
 
+  function startEdit() {
+    if (open) {
+      setDragX(0);
+      setOpen(false);
+      return;
+    }
+    setEditing(true);
+  }
+
   return (
-    <li className="py-3 flex items-center justify-between gap-3">
-      <div className="flex-1 min-w-0">
-        {editing ? (
-          <input
-            autoFocus
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-transparent px-2 py-1 text-sm"
-          />
-        ) : (
-          <div className="font-medium truncate">
-            {name}
-            {isDefault && (
-              <span className="ml-2 text-xs text-neutral-500">（默认）</span>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="flex gap-3 text-xs shrink-0">
-        {editing ? (
-          <>
-            <button
-              onClick={rename}
-              disabled={busy}
-              className="text-neutral-900 dark:text-neutral-100 disabled:opacity-50"
-            >
-              保存
-            </button>
-            <button
-              onClick={() => {
-                setVal(name);
-                setEditing(false);
+    <li className="relative overflow-hidden">
+      {!isDefault && (
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy}
+          className="absolute right-0 top-0 bottom-0 w-[88px] flex items-center justify-center bg-red-600 text-white text-sm disabled:opacity-50"
+        >
+          删除
+        </button>
+      )}
+
+      <div
+        onTouchStart={(e) => begin(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => move(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchEnd={end}
+        onPointerDown={(e) => {
+          if (e.pointerType === "touch") return;
+          begin(e.clientX, e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (e.pointerType === "touch") return;
+          if (axis.current === "h" && active.current) {
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+          }
+          move(e.clientX, e.clientY);
+        }}
+        onPointerUp={(e) => {
+          if (e.pointerType === "touch") return;
+          end();
+        }}
+        onPointerCancel={end}
+        style={{
+          transform: `translateX(${dragX}px)`,
+          transition: dragX === -REVEAL || dragX === 0 ? "transform 0.18s" : "none",
+        }}
+        className="relative bg-white dark:bg-neutral-950 py-3 flex items-center gap-3"
+      >
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <input
+              autoFocus
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              onBlur={rename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") rename();
+                if (e.key === "Escape") {
+                  setVal(name);
+                  setEditing(false);
+                }
               }}
-              className="text-neutral-500"
-            >
-              取消
-            </button>
-          </>
-        ) : (
-          <>
+              disabled={busy}
+              className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-transparent px-2 py-1 text-base"
+            />
+          ) : (
             <button
-              onClick={() => setEditing(true)}
-              className="text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100"
+              type="button"
+              onClick={startEdit}
+              className="font-medium truncate text-left w-full hover:text-neutral-600 dark:hover:text-neutral-400"
             >
-              重命名
+              {name}
+              {isDefault && (
+                <span className="ml-2 text-xs text-neutral-500 font-normal">（默认）</span>
+              )}
             </button>
-            {!isDefault && (
-              <button
-                onClick={remove}
-                disabled={busy}
-                className="text-red-600 dark:text-red-400 disabled:opacity-50"
-              >
-                删除
-              </button>
-            )}
-          </>
-        )}
+          )}
+        </div>
       </div>
     </li>
   );
