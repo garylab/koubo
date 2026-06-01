@@ -20,7 +20,11 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "60a421dd2a9d421298af2d995383e105"
+      "id": "60a421dd2a9d421298af2d995383e105",
+      // Placeholder so wrangler's binding validation passes during deploy.
+      // Local dev uses CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
+      // from .env.local instead (env var takes precedence). Not a real DB.
+      "localConnectionString": "postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder"
     }
   ]
   // Queues 绑定将在步骤 6 加入：
