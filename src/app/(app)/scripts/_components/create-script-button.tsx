@@ -3,21 +3,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function CreateScriptButton({ brandId }: { brandId: string }) {
+export function CreateScriptButton({
+  activeCollectionId,
+}: {
+  activeCollectionId: string | null;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
     setBusy(true);
-    const res = await fetch(`/api/brands/${brandId}/scripts`, {
+    const res = await fetch("/api/scripts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "" }),
+      body: JSON.stringify({
+        content: "",
+        ...(activeCollectionId ? { collectionId: activeCollectionId } : {}),
+      }),
     });
     setBusy(false);
     if (!res.ok) return;
     const data = (await res.json()) as { id: string };
-    router.push(`/brands/${brandId}/scripts/${data.id}`);
+    router.push(`/scripts/${data.id}`);
   }
 
   return (

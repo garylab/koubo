@@ -6,34 +6,35 @@ import { deriveTitle } from "@/lib/script-title";
 
 type Props = {
   scriptId: string;
-  brandId: string;
+  initialCollectionId: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
+  collections: { id: string; name: string }[];
 };
 
 export function ScriptEditor({
   scriptId,
-  brandId,
+  initialCollectionId,
   initialContent,
   embeddingUpdatedAt,
+  collections,
 }: Props) {
   const router = useRouter();
   const [content, setContent] = useState(initialContent);
-  const [saved, setSaved] = useState(initialContent);
+  const [savedContent, setSavedContent] = useState(initialContent);
+  const [collectionId, setCollectionId] = useState(initialCollectionId);
+  const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
-  const dirty = content !== saved;
+  const dirty = content !== savedContent || collectionId !== savedCollectionId;
 
-  // AI panel state
   const [aiOpen, setAiOpen] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // Keep browser tab title in sync with derived script title
   useEffect(() => {
-    const t = deriveTitle(content);
-    document.title = `${t} · Koubo`;
+    document.title = `${deriveTitle(content)} · Koubo`;
   }, [content]);
 
   async function save() {
@@ -41,11 +42,12 @@ export function ScriptEditor({
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, collectionId }),
     });
     setBusy(null);
     if (!res.ok) return;
-    setSaved(content);
+    setSavedContent(content);
+    setSavedCollectionId(collectionId);
     router.refresh();
   }
 
@@ -53,7 +55,7 @@ export function ScriptEditor({
     if (!confirm("确定删除此稿件？")) return;
     setBusy("delete");
     const res = await fetch(`/api/scripts/${scriptId}`, { method: "DELETE" });
-    if (res.ok) router.push(`/brands/${brandId}`);
+    if (res.ok) router.push("/scripts");
   }
 
   async function runAi() {
@@ -108,6 +110,17 @@ export function ScriptEditor({
           {deriveTitle(content)}
         </h1>
         <div className="flex items-center gap-2 text-xs">
+          <select
+            value={collectionId}
+            onChange={(e) => setCollectionId(e.target.value)}
+            className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-2 py-1"
+          >
+            {collections.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
           <span className="text-neutral-500">
             {dirty ? "未保存" : embeddingUpdatedAt ? "已索引" : "已保存"}
           </span>

@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { script } from "@/lib/db/schema";
-import { requireScript, requireUserId, jsonError } from "@/lib/api-helpers";
+import {
+  jsonError,
+  requireCollection,
+  requireScript,
+  requireUserId,
+} from "@/lib/api-helpers";
 import { defer } from "@/lib/defer";
 import { recomputeScriptEmbeddingAndSimilarity } from "@/lib/similarity";
 
@@ -30,20 +35,33 @@ export async function PATCH(
     const { id } = await params;
     const userId = await requireUserId();
     const { script: existing } = await requireScript(id, userId);
-    const body = (await req.json()) as { content?: string };
+    const body = (await req.json()) as { content?: string; collectionId?: string };
 
-    if (typeof body.content !== "string") {
-      return Response.json({ error: "content required" }, { status: 400 });
+    const patch: Partial<typeof script.$inferInsert> = { updatedAt: new Date() };
+    let contentChanged = false;
+
+    if (typeof body.content === "string") {
+      patch.content = body.content;
+      contentChanged = body.content !== existing.content;
+    }
+
+    if (typeof body.collectionId === "string" && body.collectionId !== existing.collectionId) {
+      await requireCollection(body.collectionId, userId);
+      patch.collectionId = body.collectionId;
     }
 
     const db = getDb();
     const [row] = await db
       .update(script)
-      .set({ content: body.content, updatedAt: new Date() })
+      .set(patch)
       .where(eq(script.id, id))
       .returning();
 
-    if (body.content !== existing.content && body.content.trim().length > 0) {
+    if (
+      contentChanged &&
+      typeof patch.content === "string" &&
+      patch.content.trim().length > 0
+    ) {
       defer(recomputeScriptEmbeddingAndSimilarity(id));
     }
 

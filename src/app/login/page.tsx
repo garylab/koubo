@@ -16,7 +16,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirectTo = params.get("redirect") || "/brands";
+  const redirectTo = params.get("redirect") || "/scripts";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

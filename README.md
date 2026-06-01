@@ -15,19 +15,21 @@
 ## 路由概览
 
 ```
-/                                  → 已登录跳 /brands，否则跳 /login
+/                                  → 已登录跳 /scripts，否则跳 /login
 /login, /register
-/brands                            → 用户的品牌列表
-/brands/[brandId]                  → 单个品牌下的稿件列表
-/brands/[brandId]/scripts/[id]     → 稿件编辑器（含 AI 优化对比 + 相似列表）
+/scripts                           → 所有稿件（可 ?c=<collectionId> 过滤为某集）
+/scripts/[scriptId]                → 稿件编辑器（含 AI 优化对比、相似列表、改集下拉）
+/collections                       → 稿件集管理（重命名/删除；默认集禁删）
 
 /api/auth/[...all]                 → Better Auth handler
-/api/brands, /api/brands/[id]
-/api/brands/[brandId]/scripts
-/api/scripts/[id]
+/api/collections, /api/collections/[id]
+/api/scripts                       → GET 列表 / POST 新建（可选 collectionId，否则入默认集）
+/api/scripts/[id]                  → GET / PATCH（改 content + collectionId）/ DELETE
 /api/ai/optimize                   → 流式 OpenAI 重写
 /api/health/db                     → DB 健康检查
 ```
+
+数据模型：`collection`（曾用名 `brand`）有 `is_default` 标记，每个用户恰好一个默认集，可改名不可删；scripts 必有 `collection_id`，未指定时落入默认集。
 
 ## 本地开发
 

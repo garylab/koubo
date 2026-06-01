@@ -1,7 +1,7 @@
 import "server-only";
-import { sql, eq, or, and, ne, isNotNull, desc } from "drizzle-orm";
+import { sql, eq, or, and, desc } from "drizzle-orm";
 import { getDb } from "./db/client";
-import { script, scriptSimilarity, brand } from "./db/schema";
+import { script, scriptSimilarity, collection } from "./db/schema";
 import { embedText } from "./openai";
 
 const SIM_THRESHOLD = 0.95;
@@ -26,10 +26,11 @@ export async function recomputeScriptEmbeddingAndSimilarity(scriptId: string) {
     WHERE id = ${scriptId}
   `);
 
+  // Same-collection similarity.
   const similar = (await db.execute(sql`
     SELECT id, (1 - (embedding <=> ${vecLit}::vector))::real AS score
     FROM "script"
-    WHERE brand_id = ${s.brandId}
+    WHERE collection_id = ${s.collectionId}
       AND id != ${scriptId}
       AND embedding IS NOT NULL
       AND (1 - (embedding <=> ${vecLit}::vector)) > ${SIM_THRESHOLD}
@@ -62,13 +63,13 @@ export async function listSimilarScripts(scriptId: string, userId: string) {
       id: script.id,
       content: script.content,
       score: scriptSimilarity.score,
-      brandId: script.brandId,
+      collectionId: script.collectionId,
     })
     .from(scriptSimilarity)
     .innerJoin(script, eq(script.id, scriptSimilarity.similarScriptId))
-    .innerJoin(brand, eq(brand.id, script.brandId))
+    .innerJoin(collection, eq(collection.id, script.collectionId))
     .where(
-      and(eq(scriptSimilarity.scriptId, scriptId), eq(brand.userId, userId)),
+      and(eq(scriptSimilarity.scriptId, scriptId), eq(collection.userId, userId)),
     )
     .orderBy(desc(scriptSimilarity.score));
   return rows;

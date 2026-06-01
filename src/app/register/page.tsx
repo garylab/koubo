@@ -21,11 +21,11 @@ export default function RegisterPage() {
       name,
       email,
       password,
-      callbackURL: "/brands",
+      callbackURL: "/scripts",
     });
     setLoading(false);
     if (error) setError(error.message ?? "注册失败");
-    else router.push("/brands");
+    else router.push("/scripts");
   }
 
   return (

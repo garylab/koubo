@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { brand } from "@/lib/db/schema";
+import { collection } from "@/lib/db/schema";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 
 export const runtime = "nodejs";
@@ -12,9 +12,9 @@ export async function GET() {
     const db = getDb();
     const rows = await db
       .select()
-      .from(brand)
-      .where(eq(brand.userId, userId))
-      .orderBy(desc(brand.updatedAt));
+      .from(collection)
+      .where(eq(collection.userId, userId))
+      .orderBy(desc(collection.isDefault), desc(collection.updatedAt));
     return Response.json(rows);
   } catch (err) {
     return jsonError(err);
@@ -31,8 +31,8 @@ export async function POST(req: Request) {
     }
     const db = getDb();
     const [row] = await db
-      .insert(brand)
-      .values({ userId, name })
+      .insert(collection)
+      .values({ userId, name, isDefault: false })
       .returning();
     return Response.json(row, { status: 201 });
   } catch (err) {

@@ -9,7 +9,7 @@ import {
   vector,
 } from "drizzle-orm/pg-core";
 
-// === Better Auth tables (singular names, snake_case columns) ===
+// === Better Auth tables ===
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -63,8 +63,11 @@ export const verification = pgTable("verification", {
 
 // === App tables ===
 
-export const brand = pgTable(
-  "brand",
+// 稿件集（collection）—— DB-renamed from "brand". One per user is marked
+// isDefault: it can be renamed but never deleted, and unspecified scripts
+// fall into it.
+export const collection = pgTable(
+  "collection",
   {
     id: text("id")
       .primaryKey()
@@ -73,10 +76,11 @@ export const brand = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("brand_user_idx").on(t.userId)],
+  (t) => [index("collection_user_idx").on(t.userId)],
 );
 
 export const script = pgTable(
@@ -85,16 +89,16 @@ export const script = pgTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    brandId: text("brand_id")
+    collectionId: text("collection_id")
       .notNull()
-      .references(() => brand.id, { onDelete: "cascade" }),
+      .references(() => collection.id, { onDelete: "cascade" }),
     content: text("content").notNull().default(""),
     embedding: vector("embedding", { dimensions: 1536 }),
     embeddingUpdatedAt: timestamp("embedding_updated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("script_brand_idx").on(t.brandId)],
+  (t) => [index("script_collection_idx").on(t.collectionId)],
 );
 
 export const scriptSimilarity = pgTable(
@@ -116,6 +120,6 @@ export const scriptSimilarity = pgTable(
 );
 
 export type User = typeof user.$inferSelect;
-export type Brand = typeof brand.$inferSelect;
+export type Collection = typeof collection.$inferSelect;
 export type Script = typeof script.$inferSelect;
 export type ScriptSimilarity = typeof scriptSimilarity.$inferSelect;

@@ -1,27 +1,27 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { brand } from "@/lib/db/schema";
-import { requireBrand, requireUserId, jsonError } from "@/lib/api-helpers";
+import { collection } from "@/lib/db/schema";
+import { requireCollection, requireUserId, jsonError } from "@/lib/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ brandId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { brandId } = await params;
+    const { id } = await params;
     const userId = await requireUserId();
-    await requireBrand(brandId, userId);
+    await requireCollection(id, userId);
     const body = (await req.json()) as { name?: string };
     const name = body.name?.trim();
     if (!name) return Response.json({ error: "name required" }, { status: 400 });
     const db = getDb();
     const [row] = await db
-      .update(brand)
+      .update(collection)
       .set({ name, updatedAt: new Date() })
-      .where(eq(brand.id, brandId))
+      .where(eq(collection.id, id))
       .returning();
     return Response.json(row);
   } catch (err) {
@@ -31,14 +31,20 @@ export async function PATCH(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ brandId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { brandId } = await params;
+    const { id } = await params;
     const userId = await requireUserId();
-    await requireBrand(brandId, userId);
+    const existing = await requireCollection(id, userId);
+    if (existing.isDefault) {
+      return Response.json(
+        { error: "默认稿件集不可删除" },
+        { status: 400 },
+      );
+    }
     const db = getDb();
-    await db.delete(brand).where(eq(brand.id, brandId));
+    await db.delete(collection).where(eq(collection.id, id));
     return new Response(null, { status: 204 });
   } catch (err) {
     return jsonError(err);
