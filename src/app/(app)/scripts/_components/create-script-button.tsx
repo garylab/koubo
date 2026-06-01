@@ -1,39 +1,19 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function CreateScriptButton({
   activeCollectionId,
 }: {
   activeCollectionId: string | null;
 }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-
-  async function onClick() {
-    setBusy(true);
-    const res = await fetch("/api/scripts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: "",
-        ...(activeCollectionId ? { collectionId: activeCollectionId } : {}),
-      }),
-    });
-    setBusy(false);
-    if (!res.ok) return;
-    const data = (await res.json()) as { id: string };
-    router.push(`/scripts/${data.id}`);
-  }
-
+  const href = activeCollectionId
+    ? `/scripts/new?c=${activeCollectionId}`
+    : "/scripts/new";
   return (
-    <button
-      onClick={onClick}
-      disabled={busy}
-      className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
+    <Link
+      href={href}
+      className="inline-block rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 py-2 text-sm font-medium"
     >
-      {busy ? "创建中…" : "新建稿件"}
-    </button>
+      新建稿件
+    </Link>
   );
 }

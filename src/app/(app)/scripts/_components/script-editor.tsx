@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  scriptId: string;
+  scriptId: string | null; // null = creating; only POSTs once content is non-empty
   initialCollectionId: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
@@ -25,7 +25,13 @@ export function ScriptEditor({
   const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
-  const dirty = content !== savedContent || collectionId !== savedCollectionId;
+
+  const isNew = scriptId === null;
+  const hasContent = content.trim().length > 0;
+  const dirty = isNew
+    ? hasContent
+    : content !== savedContent || collectionId !== savedCollectionId;
+  const canSave = dirty && hasContent;
 
   const [aiOpen, setAiOpen] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
@@ -33,7 +39,20 @@ export function ScriptEditor({
   const [aiError, setAiError] = useState<string | null>(null);
 
   async function save() {
+    if (!canSave) return;
     setBusy("save");
+    if (isNew) {
+      const res = await fetch("/api/scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, collectionId }),
+      });
+      setBusy(null);
+      if (!res.ok) return;
+      const data = (await res.json()) as { id: string };
+      router.push(`/scripts/${data.id}`);
+      return;
+    }
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -47,6 +66,10 @@ export function ScriptEditor({
   }
 
   async function remove() {
+    if (isNew) {
+      router.back();
+      return;
+    }
     if (!confirm("确定删除此稿件？")) return;
     setBusy("delete");
     const res = await fetch(`/api/scripts/${scriptId}`, { method: "DELETE" });
@@ -114,18 +137,26 @@ export function ScriptEditor({
             ))}
           </select>
           <span className="text-neutral-500">
-            {dirty ? "未保存" : embeddingUpdatedAt ? "已索引" : "已保存"}
+            {isNew
+              ? hasContent
+                ? "未保存"
+                : "空稿件"
+              : dirty
+                ? "未保存"
+                : embeddingUpdatedAt
+                  ? "已索引"
+                  : "已保存"}
           </span>
           <button
             onClick={runAi}
-            disabled={!content.trim() || aiBusy}
+            disabled={!hasContent || aiBusy}
             className="rounded-md border border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300 px-2 py-1 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-50"
           >
             ✨ AI 优化
           </button>
           <button
             onClick={save}
-            disabled={!dirty || busy !== null}
+            disabled={!canSave || busy !== null}
             className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 py-1 disabled:opacity-50"
           >
             {busy === "save" ? "保存中…" : "保存"}
@@ -135,7 +166,7 @@ export function ScriptEditor({
             disabled={busy !== null}
             className="rounded-md border border-red-300 text-red-600 dark:border-red-900 px-2 py-1 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
           >
-            删除
+            {isNew ? "取消" : "删除"}
           </button>
         </div>
       </div>

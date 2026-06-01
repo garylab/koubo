@@ -6,7 +6,7 @@ import { collection, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { listSimilarScripts } from "@/lib/similarity";
 import { deriveTitle } from "@/lib/script-title";
-import { ScriptEditor } from "./_components/script-editor";
+import { ScriptEditor } from "../_components/script-editor";
 
 export const dynamic = "force-dynamic";
 
