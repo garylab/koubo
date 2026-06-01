@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
@@ -25,33 +24,19 @@ export default async function NewScriptPage({
     .where(eq(collection.userId, session.user.id))
     .orderBy(desc(collection.isDefault), desc(collection.updatedAt));
 
-  // Resolve initial collection: explicit (?c=) > default > first.
   let initialCollectionId = collections.find((c) => c.id === explicit)?.id;
   if (!initialCollectionId) {
     const def = await getOrCreateDefaultCollection(session.user.id);
     initialCollectionId = def.id;
   }
-  const initialCollectionName =
-    collections.find((c) => c.id === initialCollectionId)?.name ?? "默认";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
-      <div>
-        <Link
-          href={`/scripts?c=${initialCollectionId}`}
-          className="text-xs text-neutral-500 hover:underline"
-        >
-          ← {initialCollectionName}
-        </Link>
-      </div>
-
-      <ScriptEditor
-        scriptId={null}
-        initialCollectionId={initialCollectionId}
-        initialContent=""
-        embeddingUpdatedAt={null}
-        collections={collections.map(({ id, name }) => ({ id, name }))}
-      />
-    </div>
+    <ScriptEditor
+      scriptId={null}
+      initialCollectionId={initialCollectionId}
+      initialContent=""
+      embeddingUpdatedAt={null}
+      collections={collections.map(({ id, name }) => ({ id, name }))}
+    />
   );
 }

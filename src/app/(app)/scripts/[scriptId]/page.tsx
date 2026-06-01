@@ -28,7 +28,6 @@ export default async function ScriptPage({
         content: script.content,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
-        collectionName: collection.name,
       })
       .from(script)
       .innerJoin(collection, eq(collection.id, script.collectionId))
@@ -45,16 +44,7 @@ export default async function ScriptPage({
   if (!row) notFound();
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
-      <div>
-        <Link
-          href={`/scripts?c=${row.collectionId}`}
-          className="text-xs text-neutral-500 hover:underline"
-        >
-          ← {row.collectionName}
-        </Link>
-      </div>
-
+    <div className="flex flex-col">
       <ScriptEditor
         scriptId={row.id}
         initialCollectionId={row.collectionId}
@@ -63,29 +53,28 @@ export default async function ScriptPage({
         collections={collections}
       />
 
-      <section className="border-t border-neutral-200 dark:border-neutral-800 pt-4">
-        <h2 className="text-sm font-semibold mb-2">
-          稿件集内相似稿件（相似度 &gt; 95%）
-        </h2>
-        {similar.length === 0 ? (
-          <p className="text-xs text-neutral-500">
-            暂无高相似稿件。保存后会在后台计算 embedding。
-          </p>
-        ) : (
-          <ul className="space-y-1">
+      {similar.length > 0 && (
+        <section className="max-w-3xl mx-auto w-full px-4 py-4">
+          <div className="text-xs text-neutral-500 mb-2">
+            相似稿件（&gt; 95%）
+          </div>
+          <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
             {similar.map((s) => (
-              <li key={s.id} className="text-sm">
-                <Link href={`/scripts/${s.id}`} className="hover:underline">
-                  {deriveTitle(s.content)}
+              <li key={s.id} className="py-2">
+                <Link
+                  href={`/scripts/${s.id}`}
+                  className="text-sm flex items-baseline justify-between gap-3"
+                >
+                  <span className="truncate">{deriveTitle(s.content)}</span>
+                  <span className="text-xs text-neutral-500 shrink-0">
+                    {(s.score * 100).toFixed(1)}%
+                  </span>
                 </Link>
-                <span className="ml-2 text-xs text-neutral-500">
-                  {(s.score * 100).toFixed(1)}%
-                </span>
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

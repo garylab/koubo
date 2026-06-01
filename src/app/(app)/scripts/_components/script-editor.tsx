@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  scriptId: string | null; // null = creating; only POSTs once content is non-empty
+  scriptId: string | null; // null = creating
   initialCollectionId: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
@@ -15,7 +15,6 @@ export function ScriptEditor({
   scriptId,
   initialCollectionId,
   initialContent,
-  embeddingUpdatedAt,
   collections,
 }: Props) {
   const router = useRouter();
@@ -122,110 +121,183 @@ export function ScriptEditor({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-end gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-xs">
-          <select
-            value={collectionId}
-            onChange={(e) => setCollectionId(e.target.value)}
-            className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-2 py-1"
-          >
-            {collections.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <span className="text-neutral-500">
-            {isNew
-              ? hasContent
-                ? "未保存"
-                : "空稿件"
-              : dirty
-                ? "未保存"
-                : embeddingUpdatedAt
-                  ? "已索引"
-                  : "已保存"}
-          </span>
+    <div className="flex flex-col">
+      <header
+        className="sticky top-0 z-30 border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="max-w-3xl mx-auto px-2 h-12 flex items-center gap-1">
           <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="返回"
+            className="w-10 h-10 inline-flex items-center justify-center text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-md"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+              <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div className="relative">
+            <select
+              value={collectionId}
+              onChange={(e) => setCollectionId(e.target.value)}
+              className="appearance-none bg-transparent text-sm font-medium pr-6 pl-2 py-1.5 outline-none cursor-pointer"
+            >
+              {collections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="w-4 h-4 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500"
+              aria-hidden
+            >
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+
+          <div className="flex-1" />
+
+          <button
+            type="button"
             onClick={runAi}
             disabled={!hasContent || aiBusy}
-            className="rounded-md border border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300 px-2 py-1 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-50"
+            aria-label="AI 优化"
+            className="w-10 h-10 inline-flex items-center justify-center rounded-md text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-30 disabled:hover:bg-transparent"
           >
-            ✨ AI 优化
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+              <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            </svg>
           </button>
+
+          {canSave && (
+            <button
+              type="button"
+              onClick={save}
+              disabled={busy !== null}
+              className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 h-9 text-sm font-medium disabled:opacity-50"
+            >
+              {busy === "save" ? "…" : "保存"}
+            </button>
+          )}
+
           <button
-            onClick={save}
-            disabled={!canSave || busy !== null}
-            className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 py-1 disabled:opacity-50"
-          >
-            {busy === "save" ? "保存中…" : "保存"}
-          </button>
-          <button
+            type="button"
             onClick={remove}
             disabled={busy !== null}
-            className="rounded-md border border-red-300 text-red-600 dark:border-red-900 px-2 py-1 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
+            aria-label={isNew ? "取消" : "删除"}
+            className="w-10 h-10 inline-flex items-center justify-center rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-30"
           >
-            {isNew ? "取消" : "删除"}
+            {isNew ? (
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+                <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </button>
         </div>
-      </div>
+      </header>
 
       {aiOpen ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 h-[60vh]">
-          <div className="flex flex-col">
-            <div className="text-xs text-neutral-500 mb-1">原文</div>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent p-3 text-sm leading-relaxed font-mono resize-none"
-            />
-          </div>
-          <div className="flex flex-col">
-            <div className="text-xs text-neutral-500 mb-1 flex items-center gap-2">
-              AI 建议
-              {aiBusy && <span className="text-violet-600">流式生成中…</span>}
-            </div>
-            <div className="flex-1 rounded-md border border-violet-300 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/30 p-3 text-sm leading-relaxed font-mono overflow-y-auto whitespace-pre-wrap">
-              {aiError ? (
-                <span className="text-red-600">{aiError}</span>
-              ) : (
-                aiSuggestion || (aiBusy ? "…" : "")
-              )}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={accept}
-                disabled={aiBusy || !aiSuggestion || !!aiError}
-                className="rounded-md bg-violet-600 text-white px-3 py-1 text-xs disabled:opacity-50"
-              >
-                采纳建议
-              </button>
-              <button
-                onClick={reject}
-                className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-xs"
-              >
-                放弃
-              </button>
-              {!aiBusy && aiSuggestion && (
-                <button
-                  onClick={runAi}
-                  className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1 text-xs"
-                >
-                  重新生成
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <AICompare
+          content={content}
+          onChange={setContent}
+          aiSuggestion={aiSuggestion}
+          aiBusy={aiBusy}
+          aiError={aiError}
+          onAccept={accept}
+          onReject={reject}
+          onRetry={runAi}
+        />
       ) : (
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="在此输入或粘贴你的视频稿…"
-          className="w-full min-h-[60vh] rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent p-3 text-sm leading-relaxed font-mono resize-y"
+          autoFocus={isNew}
+          className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-[15px] leading-relaxed outline-none resize-none min-h-[calc(100dvh-9rem)]"
         />
       )}
+    </div>
+  );
+}
+
+function AICompare({
+  content,
+  onChange,
+  aiSuggestion,
+  aiBusy,
+  aiError,
+  onAccept,
+  onReject,
+  onRetry,
+}: {
+  content: string;
+  onChange: (v: string) => void;
+  aiSuggestion: string;
+  aiBusy: boolean;
+  aiError: string | null;
+  onAccept: () => void;
+  onReject: () => void;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="max-w-3xl mx-auto w-full px-4 py-3 space-y-3">
+      <section>
+        <div className="text-xs text-neutral-500 mb-1">原文</div>
+        <textarea
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full min-h-[30vh] rounded-md border border-neutral-200 dark:border-neutral-800 bg-transparent p-3 text-sm leading-relaxed font-mono resize-y"
+        />
+      </section>
+      <section>
+        <div className="text-xs text-neutral-500 mb-1 flex items-center gap-2">
+          AI 建议
+          {aiBusy && <span className="text-violet-600">流式生成中…</span>}
+        </div>
+        <div className="w-full min-h-[30vh] rounded-md border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/30 p-3 text-sm leading-relaxed font-mono overflow-y-auto whitespace-pre-wrap">
+          {aiError ? (
+            <span className="text-red-600">{aiError}</span>
+          ) : (
+            aiSuggestion || (aiBusy ? "…" : "")
+          )}
+        </div>
+      </section>
+      <div className="flex items-center gap-3 text-sm">
+        <button
+          type="button"
+          onClick={onAccept}
+          disabled={aiBusy || !aiSuggestion || !!aiError}
+          className="rounded-md bg-violet-600 text-white px-4 py-1.5 disabled:opacity-50"
+        >
+          采纳建议
+        </button>
+        <button
+          type="button"
+          onClick={onReject}
+          className="text-neutral-500"
+        >
+          放弃
+        </button>
+        {!aiBusy && aiSuggestion && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="text-neutral-500 ml-auto"
+          >
+            重新生成
+          </button>
+        )}
+      </div>
     </div>
   );
 }
