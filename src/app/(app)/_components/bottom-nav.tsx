@@ -1,0 +1,93 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+type Tab = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  matches: (path: string) => boolean;
+};
+
+const TABS: Tab[] = [
+  {
+    href: "/scripts",
+    label: "稿件",
+    matches: (p) => p === "/scripts" || p.startsWith("/scripts"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
+        <path
+          d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <path d="M14 4v5h5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M8.5 13h7M8.5 16.5h7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: "/collections",
+    label: "稿件集",
+    matches: (p) => p === "/collections" || p.startsWith("/collections/"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
+        <path
+          d="M4 7a2 2 0 0 1 2-2h3.5l2 2H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/me",
+    label: "我的",
+    matches: (p) => p === "/me" || p.startsWith("/me/"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
+        <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" />
+        <path
+          d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+];
+
+export function BottomNav() {
+  const pathname = usePathname();
+  return (
+    <nav
+      className="fixed bottom-0 inset-x-0 z-40 border-t border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div className="mx-auto max-w-3xl grid grid-cols-3">
+        {TABS.map((t) => {
+          const active = t.matches(pathname);
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={
+                "flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors " +
+                (active
+                  ? "text-neutral-900 dark:text-neutral-100"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200")
+              }
+            >
+              {t.icon}
+              <span>{t.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

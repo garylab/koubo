@@ -12,9 +12,9 @@ export function SignOutButton() {
         router.push("/login");
         router.refresh();
       }}
-      className="rounded-md border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-900"
+      className="w-full rounded-xl border border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 py-3 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950"
     >
-      退出
+      退出登录
     </button>
   );
 }

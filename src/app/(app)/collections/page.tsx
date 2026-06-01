@@ -2,15 +2,14 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
-import { getOrCreateDefaultCollection } from "@/lib/api-helpers";
 import { CollectionRow } from "./_components/collection-row";
+import { CreateCollectionForm } from "./_components/create-collection-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function CollectionsPage() {
   const session = await getServerSession();
   if (!session) return null;
-  await getOrCreateDefaultCollection(session.user.id);
 
   const db = getDb();
   const collections = await db
@@ -20,13 +19,14 @@ export default async function CollectionsPage() {
     .orderBy(desc(collection.isDefault), desc(collection.updatedAt));
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-4">
+    <div className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">稿件集</h1>
-        <p className="text-sm text-neutral-500">
+        <h1 className="text-xl font-semibold">稿件集</h1>
+        <p className="text-xs text-neutral-500 mt-1">
           稿件集用于把稿件分组。默认稿件集不可删除，但可以重命名。
         </p>
       </div>
+      <CreateCollectionForm />
       <ul className="space-y-2">
         {collections.map((c) => (
           <CollectionRow

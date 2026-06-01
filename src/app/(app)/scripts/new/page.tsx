@@ -35,7 +35,7 @@ export default async function NewScriptPage({
     collections.find((c) => c.id === initialCollectionId)?.name ?? "默认";
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-4">
+    <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
       <div>
         <Link
           href={`/scripts?c=${initialCollectionId}`}

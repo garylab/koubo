@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { deriveTitle } from "@/lib/script-title";
-import { CreateScriptButton } from "./_components/create-script-button";
+import { CollectionChips } from "../_components/collection-chips";
 
 export const dynamic = "force-dynamic";
 
@@ -18,37 +18,57 @@ export default async function ScriptsPage({
   const { c: activeCollectionId } = await searchParams;
 
   const db = getDb();
+  const [collections, scripts] = await Promise.all([
+    db
+      .select({ id: collection.id, name: collection.name })
+      .from(collection)
+      .where(eq(collection.userId, session.user.id))
+      .orderBy(desc(collection.isDefault), desc(collection.updatedAt)),
+    db
+      .select({
+        id: script.id,
+        collectionId: script.collectionId,
+        collectionName: collection.name,
+        content: script.content,
+        updatedAt: script.updatedAt,
+        embeddingUpdatedAt: script.embeddingUpdatedAt,
+      })
+      .from(script)
+      .innerJoin(collection, eq(collection.id, script.collectionId))
+      .where(
+        activeCollectionId
+          ? and(
+              eq(collection.userId, session.user.id),
+              eq(script.collectionId, activeCollectionId),
+            )
+          : eq(collection.userId, session.user.id),
+      )
+      .orderBy(desc(script.updatedAt)),
+  ]);
 
-  const scripts = await db
-    .select({
-      id: script.id,
-      collectionId: script.collectionId,
-      collectionName: collection.name,
-      content: script.content,
-      updatedAt: script.updatedAt,
-      embeddingUpdatedAt: script.embeddingUpdatedAt,
-    })
-    .from(script)
-    .innerJoin(collection, eq(collection.id, script.collectionId))
-    .where(
-      activeCollectionId
-        ? and(
-            eq(collection.userId, session.user.id),
-            eq(script.collectionId, activeCollectionId),
-          )
-        : eq(collection.userId, session.user.id),
-    )
-    .orderBy(desc(script.updatedAt));
+  const href = activeCollectionId
+    ? `/scripts/new?c=${activeCollectionId}`
+    : "/scripts/new";
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-4">
-      <CreateScriptButton activeCollectionId={activeCollectionId ?? null} />
+    <div className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold">稿件</h1>
+        <Link
+          href={href}
+          className="rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 py-1.5 text-sm font-medium"
+        >
+          + 新建
+        </Link>
+      </div>
+
+      <CollectionChips collections={collections} />
 
       {scripts.length === 0 ? (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-neutral-500 pt-6 text-center">
           {activeCollectionId
-            ? "此稿件集还没有稿件，点上面按钮新建。"
-            : "还没有任何稿件，点上面按钮新建。"}
+            ? "此稿件集还没有稿件"
+            : "还没有稿件，点右上角新建"}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -56,13 +76,11 @@ export default async function ScriptsPage({
             <li key={s.id}>
               <Link
                 href={`/scripts/${s.id}`}
-                className="block rounded-md border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                className="block rounded-xl border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
               >
                 <div className="font-medium truncate">{deriveTitle(s.content)}</div>
-                <div className="text-xs text-neutral-500">
-                  {s.collectionName} · 更新于{" "}
-                  {new Date(s.updatedAt).toLocaleString("zh-CN")}
-                  {s.embeddingUpdatedAt ? " · 已索引" : " · 待索引"}
+                <div className="text-xs text-neutral-500 mt-0.5">
+                  {s.collectionName} · {new Date(s.updatedAt).toLocaleString("zh-CN")}
                 </div>
               </Link>
             </li>

@@ -45,7 +45,7 @@ export default async function ScriptPage({
   if (!row) notFound();
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-4">
+    <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
       <div>
         <Link
           href={`/scripts?c=${row.collectionId}`}
