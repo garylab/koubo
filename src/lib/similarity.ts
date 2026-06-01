@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "./db/client";
 import { script, collection } from "./db/schema";
-import { embedText } from "./openai";
+import { embedText } from "./ai";
 
 const SIM_THRESHOLD = 0.95;
 const SIM_LIMIT = 20;

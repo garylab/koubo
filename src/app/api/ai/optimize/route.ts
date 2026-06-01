@@ -1,5 +1,5 @@
 import { requireUserId, jsonError } from "@/lib/api-helpers";
-import { streamChatCompletion } from "@/lib/openai";
+import { streamChatCompletion } from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,11 +23,7 @@ export async function POST(req: Request) {
       user: content,
     });
 
-    if (!upstream.ok || !upstream.body) {
-      const errText = await upstream.text();
-      return Response.json({ error: errText }, { status: upstream.status });
-    }
-
+    // Workers AI streams SSE: `data: {"response":"chunk"}\n\n` ... `data: [DONE]`
     const decoder = new TextDecoder();
     const encoder = new TextEncoder();
     let buffer = "";
@@ -43,11 +39,8 @@ export async function POST(req: Request) {
           const data = line.slice(5).trim();
           if (!data || data === "[DONE]") continue;
           try {
-            const json = JSON.parse(data) as {
-              choices?: { delta?: { content?: string } }[];
-            };
-            const piece = json.choices?.[0]?.delta?.content;
-            if (piece) controller.enqueue(encoder.encode(piece));
+            const json = JSON.parse(data) as { response?: string };
+            if (json.response) controller.enqueue(encoder.encode(json.response));
           } catch {
             // ignore partial JSON across boundaries
           }
@@ -55,7 +48,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return new Response(upstream.body.pipeThrough(transformer), {
+    return new Response(upstream.pipeThrough(transformer), {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
