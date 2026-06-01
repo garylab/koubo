@@ -4,12 +4,7 @@ import { getAuth } from "@/lib/auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-let handler: ReturnType<typeof toNextJsHandler> | null = null;
-
-function getHandler() {
-  if (!handler) handler = toNextJsHandler(getAuth());
-  return handler;
-}
-
-export const GET = (req: Request) => getHandler().GET(req);
-export const POST = (req: Request) => getHandler().POST(req);
+// Build a fresh handler per request — getAuth() / getDb() must not be cached
+// across Worker requests (I/O isolation).
+export const GET = (req: Request) => toNextJsHandler(getAuth()).GET(req);
+export const POST = (req: Request) => toNextJsHandler(getAuth()).POST(req);

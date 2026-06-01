@@ -3,12 +3,9 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "./db/client";
 import { user, session, account, verification } from "./db/schema";
 
-type Auth = ReturnType<typeof betterAuth>;
-let cached: Auth | null = null;
-
-export function getAuth(): Auth {
-  if (cached) return cached;
-
+// No module-level cache — the db handed to drizzleAdapter holds a per-request
+// Neon Pool; reusing it across requests violates Workers I/O isolation.
+export function getAuth() {
   const options: BetterAuthOptions = {
     database: drizzleAdapter(getDb(), {
       provider: "pg",
@@ -16,10 +13,7 @@ export function getAuth(): Auth {
     }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
-    emailAndPassword: {
-      enabled: true,
-      autoSignIn: true,
-    },
+    emailAndPassword: { enabled: true, autoSignIn: true },
     socialProviders: {
       google: {
         clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -27,11 +21,9 @@ export function getAuth(): Auth {
       },
     },
     session: {
-      expiresIn: 60 * 60 * 24 * 30, // 30 days
-      updateAge: 60 * 60 * 24, // refresh once per day
+      expiresIn: 60 * 60 * 24 * 30,
+      updateAge: 60 * 60 * 24,
     },
   };
-
-  cached = betterAuth(options);
-  return cached;
+  return betterAuth(options);
 }
