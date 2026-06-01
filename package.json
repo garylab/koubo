@@ -9,7 +9,7 @@
     "lint": "next lint",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "npm run cf-typegen && opennextjs-cloudflare build",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:enable": "node --env-file=.env.local scripts/db-enable.mjs",
     "db:generate": "drizzle-kit generate",
