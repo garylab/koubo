@@ -16,11 +16,17 @@
   },
   "routes": [
     { "pattern": "koubo.garymeng.com", "custom_domain": true }
+  ],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "60a421dd2a9d421298af2d995383e105",
+      // Placeholder satisfies wrangler's deploy-time binding validation.
+      // Local dev uses CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
+      // from .env.local (env var takes precedence). Not a real DB.
+      "localConnectionString": "postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder"
+    }
   ]
-  // Hyperdrive intentionally removed: postgres.js + Hyperdrive in workerd
-  // showed hangs/exceptions in production. App now uses @neondatabase/serverless
-  // (WebSocket) reading DATABASE_URL from a wrangler secret. Hyperdrive can be
-  // reintroduced once that path is verified stable.
   // Queues 绑定将在步骤 6 加入：
   // "queues": {
   //   "producers": [{ "binding": "SIMILARITY_QUEUE", "queue": "koubo-similarity" }],

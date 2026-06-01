@@ -26,7 +26,7 @@ export async function recomputeScriptEmbeddingAndSimilarity(scriptId: string) {
     WHERE id = ${scriptId}
   `);
 
-  const result = await db.execute(sql`
+  const similar = (await db.execute(sql`
     SELECT id, (1 - (embedding <=> ${vecLit}::vector))::real AS score
     FROM "script"
     WHERE brand_id = ${s.brandId}
@@ -35,8 +35,7 @@ export async function recomputeScriptEmbeddingAndSimilarity(scriptId: string) {
       AND (1 - (embedding <=> ${vecLit}::vector)) > ${SIM_THRESHOLD}
     ORDER BY embedding <=> ${vecLit}::vector
     LIMIT ${SIM_LIMIT}
-  `);
-  const similar = result.rows as { id: string; score: number }[];
+  `)) as unknown as { id: string; score: number }[];
 
   await db
     .delete(scriptSimilarity)
