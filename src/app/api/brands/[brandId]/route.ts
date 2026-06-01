@@ -8,12 +8,12 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ brandId: string }> },
 ) {
   try {
-    const { id } = await params;
+    const { brandId } = await params;
     const userId = await requireUserId();
-    await requireBrand(id, userId);
+    await requireBrand(brandId, userId);
     const body = (await req.json()) as { name?: string };
     const name = body.name?.trim();
     if (!name) return Response.json({ error: "name required" }, { status: 400 });
@@ -21,7 +21,7 @@ export async function PATCH(
     const [row] = await db
       .update(brand)
       .set({ name, updatedAt: new Date() })
-      .where(eq(brand.id, id))
+      .where(eq(brand.id, brandId))
       .returning();
     return Response.json(row);
   } catch (err) {
@@ -31,14 +31,14 @@ export async function PATCH(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ brandId: string }> },
 ) {
   try {
-    const { id } = await params;
+    const { brandId } = await params;
     const userId = await requireUserId();
-    await requireBrand(id, userId);
+    await requireBrand(brandId, userId);
     const db = getDb();
-    await db.delete(brand).where(eq(brand.id, id));
+    await db.delete(brand).where(eq(brand.id, brandId));
     return new Response(null, { status: 204 });
   } catch (err) {
     return jsonError(err);
