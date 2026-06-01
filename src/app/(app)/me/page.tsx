@@ -10,17 +10,20 @@ export default async function MePage() {
   if (!session) return null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-      <h1 className="text-xl font-semibold">我的</h1>
-
-      <ProfileForm
-        initialName={session.user.name}
-        email={session.user.email}
-      />
-
-      <PasswordChangeForm />
-
-      <SignOutButton />
+    <div className="max-w-3xl mx-auto px-4">
+      <div className="pt-4 pb-2">
+        <h1 className="text-xl font-semibold">我的</h1>
+      </div>
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-800">
+        <ProfileForm
+          initialName={session.user.name}
+          email={session.user.email}
+        />
+        <PasswordChangeForm />
+      </div>
+      <div className="pt-8">
+        <SignOutButton />
+      </div>
     </div>
   );
 }

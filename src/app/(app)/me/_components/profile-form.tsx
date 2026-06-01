@@ -38,45 +38,40 @@ export function ProfileForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 space-y-3"
-    >
-      <div>
-        <label className="text-xs text-neutral-500">昵称</label>
+    <form onSubmit={onSubmit} className="py-3 space-y-3">
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-neutral-500 w-14 shrink-0">昵称</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent px-3 py-2 text-sm"
+          className="flex-1 bg-transparent text-sm outline-none border-b border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 py-1"
         />
-      </div>
-      <div>
-        <label className="text-xs text-neutral-500">邮箱</label>
-        <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          {email}
-        </div>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        {msg ? (
-          <span
-            className={
-              "text-xs " +
-              (msg.kind === "ok" ? "text-emerald-600" : "text-red-600")
-            }
+        {dirty && (
+          <button
+            type="submit"
+            disabled={busy}
+            className="text-sm text-neutral-900 dark:text-neutral-100 disabled:opacity-50"
           >
-            {msg.text}
-          </span>
-        ) : (
-          <span />
+            {busy ? "…" : "保存"}
+          </button>
         )}
-        <button
-          type="submit"
-          disabled={!dirty || busy}
-          className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 py-1.5 text-sm disabled:opacity-50"
-        >
-          {busy ? "保存中…" : "保存"}
-        </button>
       </div>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-neutral-500 w-14 shrink-0">邮箱</span>
+        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          {email}
+        </span>
+      </div>
+      {msg && (
+        <div
+          className={
+            "text-xs " +
+            (msg.kind === "ok" ? "text-emerald-600" : "text-red-600")
+          }
+        >
+          {msg.text}
+        </div>
+      )}
     </form>
   );
 }
