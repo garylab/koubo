@@ -5,8 +5,8 @@
 ## 技术栈
 
 - **Next.js 15**（App Router） + React 19，部署到 Cloudflare Workers（`@opennextjs/cloudflare`）
-- **Neon Postgres** + pgvector + HNSW 索引，经 **Cloudflare Hyperdrive** 连接
-- **Drizzle ORM**
+- **Neon Postgres** + pgvector + HNSW 索引，通过 **`@neondatabase/serverless`**（WebSocket）连接，原生兼容 Workers 且支持事务
+- **Drizzle ORM**（`drizzle-orm/neon-serverless`）
 - **Better Auth**（Google OAuth + email/password）
 - **OpenAI** `text-embedding-3-small`（1536 维）+ `gpt-4o-mini`（AI 重写，流式）
 - 后台计算：`ctx.waitUntil`（保存后异步算 embedding + 更新相似表）
@@ -47,19 +47,23 @@ http://localhost:3000/api/auth/callback/google
 
 ### 一次性准备
 
-1. **创建 Hyperdrive**（已建：`neon-koubo`，id `60a421d...`），id 已写入 `wrangler.jsonc`
-2. **绑定 secrets** —— 用 wrangler 设置（CF Workers Builds 不会读 GitHub 上的 .env）：
+1. **绑定 secrets** —— 用 wrangler 设置（CF Workers Builds 不会读 GitHub 上的 .env）：
    ```bash
+   npx wrangler secret put DATABASE_URL
+   # postgresql://neondb_owner:...@ep-...neon.tech/neondb?sslmode=require
+   # (不带 channel_binding=require)
    npx wrangler secret put BETTER_AUTH_SECRET
    npx wrangler secret put GOOGLE_CLIENT_ID
    npx wrangler secret put GOOGLE_CLIENT_SECRET
    npx wrangler secret put OPENAI_API_KEY
    ```
-3. **Google Cloud Console** → OAuth Client → Authorized redirect URIs 追加：
+2. **Google Cloud Console** → OAuth Client → Authorized redirect URIs 追加：
    ```
    https://koubo.garymeng.com/api/auth/callback/google
    ```
-4. **绑定自定义域**：Workers → koubo → Settings → Domains & Routes → 加 `koubo.garymeng.com`（已在 `wrangler.jsonc` 声明，CF 会自动配 DNS）
+3. **绑定自定义域**：Workers → koubo → Settings → Domains & Routes → 加 `koubo.garymeng.com`（已在 `wrangler.jsonc` 声明，CF 会自动配 DNS）
+
+> Hyperdrive 暂时未启用——postgres.js + Hyperdrive 在 workerd 出现过运行时 hang/exception。等 neon-serverless 稳定后可重新评估是否切回。
 
 ### 接入 CF Workers Builds
 

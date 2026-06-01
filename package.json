@@ -19,6 +19,7 @@
     "db:setup": "npm run db:enable && npm run db:generate && npm run db:migrate && npm run db:index"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "better-auth": "^1.6.13",
     "drizzle-orm": "^0.45.2",
     "kysely": "^0.28.17",
