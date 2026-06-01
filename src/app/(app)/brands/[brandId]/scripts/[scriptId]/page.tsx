@@ -19,28 +19,29 @@ export default async function ScriptPage({
   if (!session) return null;
 
   const db = getDb();
-  const [row] = await db
-    .select({
-      id: script.id,
-      brandId: script.brandId,
-      title: script.title,
-      content: script.content,
-      updatedAt: script.updatedAt,
-      embeddingUpdatedAt: script.embeddingUpdatedAt,
-      brandName: brand.name,
-    })
-    .from(script)
-    .innerJoin(brand, eq(brand.id, script.brandId))
-    .where(
-      and(
-        eq(script.id, scriptId),
-        eq(script.brandId, brandId),
-        eq(brand.userId, session.user.id),
+  const [[row], similar] = await Promise.all([
+    db
+      .select({
+        id: script.id,
+        brandId: script.brandId,
+        title: script.title,
+        content: script.content,
+        updatedAt: script.updatedAt,
+        embeddingUpdatedAt: script.embeddingUpdatedAt,
+        brandName: brand.name,
+      })
+      .from(script)
+      .innerJoin(brand, eq(brand.id, script.brandId))
+      .where(
+        and(
+          eq(script.id, scriptId),
+          eq(script.brandId, brandId),
+          eq(brand.userId, session.user.id),
+        ),
       ),
-    );
+    listSimilarScripts(scriptId, session.user.id),
+  ]);
   if (!row) notFound();
-
-  const similar = await listSimilarScripts(scriptId, session.user.id);
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-4">

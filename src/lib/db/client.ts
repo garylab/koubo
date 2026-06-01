@@ -1,6 +1,7 @@
 import postgres from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { cache } from "react";
 import * as schema from "./schema";
 
 type DB = PostgresJsDatabase<typeof schema>;
@@ -19,21 +20,19 @@ function resolveConnectionString(): string {
   return url;
 }
 
-// IMPORTANT: do NOT cache the client / db at module scope.
-// Workers isolates I/O per request; a postgres client reused across requests
-// throws "Cannot perform I/O on behalf of a different request".
-// Hyperdrive makes per-request setup cheap: the worker→hyperdrive socket is
-// intra-DC and the actual DB connection is reused from its warm pool.
-export function getDb(): DB {
+// React `cache()` dedupes within ONE request (server component render or
+// route handler invocation). Across requests we still create fresh — Workers
+// I/O isolation requires it. So we get the best of both: only one postgres
+// client per request, but no risk of cross-request I/O reuse.
+export const getDb = cache((): DB => {
   const client = postgres(resolveConnectionString(), {
-    // Neon's -pooler endpoint is PgBouncer in transaction mode.
-    prepare: false,
+    prepare: false, // Neon -pooler is PgBouncer transaction mode
     max: 1,
     fetch_types: false,
     idle_timeout: 20,
     connect_timeout: 10,
   });
   return drizzle(client, { schema });
-}
+});
 
 export { schema };

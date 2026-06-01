@@ -19,22 +19,23 @@ export default async function BrandPage({
   if (!session) return null;
 
   const db = getDb();
-  const [b] = await db
-    .select()
-    .from(brand)
-    .where(and(eq(brand.id, brandId), eq(brand.userId, session.user.id)));
+  const [[b], scripts] = await Promise.all([
+    db
+      .select()
+      .from(brand)
+      .where(and(eq(brand.id, brandId), eq(brand.userId, session.user.id))),
+    db
+      .select({
+        id: script.id,
+        title: script.title,
+        updatedAt: script.updatedAt,
+        embeddingUpdatedAt: script.embeddingUpdatedAt,
+      })
+      .from(script)
+      .where(eq(script.brandId, brandId))
+      .orderBy(desc(script.updatedAt)),
+  ]);
   if (!b) notFound();
-
-  const scripts = await db
-    .select({
-      id: script.id,
-      title: script.title,
-      updatedAt: script.updatedAt,
-      embeddingUpdatedAt: script.embeddingUpdatedAt,
-    })
-    .from(script)
-    .where(eq(script.brandId, brandId))
-    .orderBy(desc(script.updatedAt));
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">

@@ -1,11 +1,12 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { cache } from "react";
 import { getDb } from "./db/client";
 import { user, session, account, verification } from "./db/schema";
 
-// No module-level cache — the db handed to drizzleAdapter holds a per-request
-// Neon Pool; reusing it across requests violates Workers I/O isolation.
-export function getAuth() {
+// Dedupe within one request via React.cache (the auth instance holds the
+// drizzle db; we want both shared per-request, both fresh across requests).
+export const getAuth = cache(() => {
   const options: BetterAuthOptions = {
     database: drizzleAdapter(getDb(), {
       provider: "pg",
@@ -26,4 +27,4 @@ export function getAuth() {
     },
   };
   return betterAuth(options);
-}
+});
