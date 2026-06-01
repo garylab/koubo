@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  SCRIPT_STATUSES,
-  SCRIPT_STATUS_LABEL,
-  type ScriptStatus,
-} from "@/lib/script-status";
 
 type Props = {
   scriptId: string | null; // null = creating
   initialCollectionId: string;
   initialContent: string;
-  initialStatus: ScriptStatus;
   embeddingUpdatedAt: string | null;
   collections: { id: string; name: string }[];
 };
@@ -21,7 +15,6 @@ export function ScriptEditor({
   scriptId,
   initialCollectionId,
   initialContent,
-  initialStatus,
   collections,
 }: Props) {
   const router = useRouter();
@@ -29,8 +22,6 @@ export function ScriptEditor({
   const [savedContent, setSavedContent] = useState(initialContent);
   const [collectionId, setCollectionId] = useState(initialCollectionId);
   const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
-  const [status, setStatus] = useState<ScriptStatus>(initialStatus);
-  const [savedStatus, setSavedStatus] = useState<ScriptStatus>(initialStatus);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
 
@@ -38,9 +29,7 @@ export function ScriptEditor({
   const hasContent = content.trim().length > 0;
   const dirty = isNew
     ? hasContent
-    : content !== savedContent ||
-      collectionId !== savedCollectionId ||
-      status !== savedStatus;
+    : content !== savedContent || collectionId !== savedCollectionId;
   const canSave = dirty && hasContent;
 
   const [aiOpen, setAiOpen] = useState(false);
@@ -66,13 +55,12 @@ export function ScriptEditor({
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, collectionId, status }),
+      body: JSON.stringify({ content, collectionId }),
     });
     setBusy(null);
     if (!res.ok) return;
     setSavedContent(content);
     setSavedCollectionId(collectionId);
-    setSavedStatus(status);
     router.refresh();
   }
 
@@ -190,7 +178,7 @@ export function ScriptEditor({
             onChange={(e) => setContent(e.target.value)}
             placeholder="在此输入或粘贴你的视频稿…"
             autoFocus={isNew}
-            className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-[15px] leading-relaxed outline-none resize-none min-h-[50dvh]"
+            className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-base leading-relaxed outline-none resize-none min-h-[50dvh]"
           />
 
           <div className="max-w-3xl mx-auto w-full px-4 py-4 space-y-4 border-t border-neutral-200 dark:border-neutral-800">
@@ -215,30 +203,7 @@ export function ScriptEditor({
               </div>
             </div>
 
-            {!isNew && (
-              <div>
-                <div className="text-xs text-neutral-500 mb-2">状态</div>
-                <div className="flex flex-wrap gap-2">
-                  {SCRIPT_STATUSES.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setStatus(s)}
-                      className={
-                        "rounded-full px-3 py-1 text-sm border transition-colors " +
-                        (status === s
-                          ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 border-neutral-900 dark:border-neutral-100"
-                          : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900")
-                      }
-                    >
-                      {SCRIPT_STATUS_LABEL[s]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 pt-2">
+<div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={runAi}
@@ -296,7 +261,7 @@ function AICompare({
         <textarea
           value={content}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full min-h-[30vh] rounded-md border border-neutral-200 dark:border-neutral-800 bg-transparent p-3 text-sm leading-relaxed font-mono resize-y"
+          className="w-full min-h-[30vh] rounded-md border border-neutral-200 dark:border-neutral-800 bg-transparent p-3 text-base leading-relaxed font-mono resize-y"
         />
       </section>
       <section>

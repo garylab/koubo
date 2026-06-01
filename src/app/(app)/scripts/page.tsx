@@ -8,6 +8,7 @@ import { isScriptStatus, type ScriptStatus } from "@/lib/script-status";
 import { ScriptsHeader } from "./_components/scripts-header";
 import { ScriptsFilters, type SortKey } from "./_components/scripts-filters";
 import { ScriptListItem } from "./_components/script-list-item";
+import { PullToRefresh } from "./_components/pull-to-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,8 @@ export default async function ScriptsPage({
   return (
     <>
       <ScriptsHeader />
-      <div className="max-w-3xl mx-auto px-4 pt-3 space-y-3">
+      <PullToRefresh>
+        <div className="max-w-3xl mx-auto px-4 pt-3 space-y-3">
         <Suspense fallback={null}>
           <ScriptsFilters
             collections={collections}
@@ -98,7 +100,8 @@ export default async function ScriptsPage({
             ))}
           </ul>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
     </>
   );
 }

@@ -1,12 +1,18 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
+// New build ID per deploy. Used to bust the service worker cache so PWA users
+// pick up new code automatically. Falls back to Date.now() in local dev.
+const BUILD_ID = process.env.BUILD_ID || Date.now().toString();
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: __dirname,
   // Allow the Cloudflare tunnel host to talk to the Next.js dev server
   // (HMR/_next/* requests come with that Host header).
   allowedDevOrigins: ["koubo-dev.garymeng.com"],
+  generateBuildId: async () => BUILD_ID,
+  env: { NEXT_PUBLIC_BUILD_ID: BUILD_ID },
 };
 
 // Emulate Cloudflare bindings only in `next dev`. During `next build`

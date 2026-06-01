@@ -1,4 +1,11 @@
-const CACHE = "koubo-v1";
+export const runtime = "nodejs";
+export const dynamic = "force-static";
+
+const BUILD_ID = process.env.NEXT_PUBLIC_BUILD_ID ?? "dev";
+
+const body = `
+const BUILD_ID = ${JSON.stringify(BUILD_ID)};
+const CACHE = "koubo-" + BUILD_ID;
 const STATIC = ["/icon.svg", "/icon-maskable.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -42,3 +49,14 @@ self.addEventListener("fetch", (event) => {
     ),
   );
 });
+`;
+
+export function GET() {
+  return new Response(body, {
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      // Bypass HTTP cache so browsers re-check the SW byte-for-byte on every load.
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+    },
+  });
+}

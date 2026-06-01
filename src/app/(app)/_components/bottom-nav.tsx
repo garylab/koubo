@@ -86,7 +86,7 @@ function NavTab({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       className={
-        "flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors " +
+        "flex flex-col items-center justify-center gap-0.5 py-3.5 text-[11px] transition-colors " +
         (active
           ? "text-neutral-900 dark:text-neutral-100"
           : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200")
@@ -103,7 +103,7 @@ function CreateButton({ href }: { href: string }) {
     <Link
       href={href}
       aria-label="新建稿件"
-      className="flex items-center justify-center py-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+      className="flex items-center justify-center py-3.5 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
     >
       <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" aria-hidden>
         <path

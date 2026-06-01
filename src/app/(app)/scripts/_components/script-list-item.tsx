@@ -213,7 +213,7 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
               <div
                 ref={menuWrapRef}
                 style={{ position: "fixed", left: menuPos.left, top: menuPos.top }}
-                className="z-50 min-w-[7rem] rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1"
+                className="z-50 w-max rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1"
               >
                 {SCRIPT_STATUSES.map((s) => (
                   <button
