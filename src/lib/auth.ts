@@ -4,12 +4,10 @@ import { cache } from "react";
 import { getDb } from "./db/client";
 import { user, session, account, verification } from "./db/schema";
 
-// Dedupe within one request via React.cache (the auth instance holds the
-// drizzle db; we want both shared per-request, both fresh across requests).
 export const getAuth = cache(() => {
   const options: BetterAuthOptions = {
     database: drizzleAdapter(getDb(), {
-      provider: "pg",
+      provider: "sqlite",
       schema: { user, session, account, verification },
     }),
     secret: process.env.BETTER_AUTH_SECRET,

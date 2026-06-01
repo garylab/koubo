@@ -17,19 +17,20 @@
   "routes": [
     { "pattern": "koubo.garymeng.com", "custom_domain": true }
   ],
-  "hyperdrive": [
+  "d1_databases": [
     {
-      "binding": "HYPERDRIVE",
-      "id": "60a421dd2a9d421298af2d995383e105",
-      // Placeholder satisfies wrangler's deploy-time binding validation.
-      // Local dev uses CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
-      // from .env.local (env var takes precedence). Not a real DB.
-      "localConnectionString": "postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder"
+      "binding": "DB",
+      "database_name": "koubo-db",
+      "database_id": "1c34ec20-ca6b-4c62-b49b-c690a357292b"
     }
-  ]
-  // Queues 绑定将在步骤 6 加入：
-  // "queues": {
-  //   "producers": [{ "binding": "SIMILARITY_QUEUE", "queue": "koubo-similarity" }],
-  //   "consumers": [{ "queue": "koubo-similarity", "max_batch_size": 10 }]
-  // }
+  ],
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "koubo-vec"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  }
 }

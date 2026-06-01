@@ -1,32 +1,38 @@
 import {
-  pgTable,
+  sqliteTable,
   text,
-  timestamp,
-  boolean,
-  real,
+  integer,
   index,
-  primaryKey,
-  vector,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/sqlite-core";
 
-// === Better Auth tables ===
+// === Better Auth tables (SQLite types) ===
 
-export const user = pgTable("user", {
+export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerified: integer("email_verified", { mode: "boolean" })
+    .notNull()
+    .default(false),
   image: text("image"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
-export const session = pgTable("session", {
+export const session = sqliteTable("session", {
   id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
   token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   userId: text("user_id")
@@ -34,7 +40,7 @@ export const session = pgTable("session", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
-export const account = pgTable("account", {
+export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -44,29 +50,40 @@ export const account = pgTable("account", {
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  accessTokenExpiresAt: integer("access_token_expires_at", {
+    mode: "timestamp_ms",
+  }),
+  refreshTokenExpiresAt: integer("refresh_token_expires_at", {
+    mode: "timestamp_ms",
+  }),
   scope: text("scope"),
   password: text("password"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
-export const verification = pgTable("verification", {
+export const verification = sqliteTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
 // === App tables ===
+// Embeddings live in Cloudflare Vectorize, not in D1.
+// embeddingUpdatedAt is a hint for the UI; actual vector lookups go through env.VECTORIZE.
 
-// 稿件集（collection）—— DB-renamed from "brand". One per user is marked
-// isDefault: it can be renamed but never deleted, and unspecified scripts
-// fall into it.
-export const collection = pgTable(
+export const collection = sqliteTable(
   "collection",
   {
     id: text("id")
@@ -76,14 +93,20 @@ export const collection = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    isDefault: boolean("is_default").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    isDefault: integer("is_default", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (t) => [index("collection_user_idx").on(t.userId)],
 );
 
-export const script = pgTable(
+export const script = sqliteTable(
   "script",
   {
     id: text("id")
@@ -93,33 +116,17 @@ export const script = pgTable(
       .notNull()
       .references(() => collection.id, { onDelete: "cascade" }),
     content: text("content").notNull().default(""),
-    embedding: vector("embedding", { dimensions: 1536 }),
-    embeddingUpdatedAt: timestamp("embedding_updated_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    embeddingUpdatedAt: integer("embedding_updated_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (t) => [index("script_collection_idx").on(t.collectionId)],
-);
-
-export const scriptSimilarity = pgTable(
-  "script_similarity",
-  {
-    scriptId: text("script_id")
-      .notNull()
-      .references(() => script.id, { onDelete: "cascade" }),
-    similarScriptId: text("similar_script_id")
-      .notNull()
-      .references(() => script.id, { onDelete: "cascade" }),
-    score: real("score").notNull(),
-    computedAt: timestamp("computed_at").notNull().defaultNow(),
-  },
-  (t) => [
-    primaryKey({ columns: [t.scriptId, t.similarScriptId] }),
-    index("similarity_script_idx").on(t.scriptId),
-  ],
 );
 
 export type User = typeof user.$inferSelect;
 export type Collection = typeof collection.$inferSelect;
 export type Script = typeof script.$inferSelect;
-export type ScriptSimilarity = typeof scriptSimilarity.$inferSelect;

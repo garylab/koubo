@@ -11,20 +11,15 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "build:cf": "npm run cf-typegen && opennextjs-cloudflare build",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "db:enable": "node --env-file=.env.local scripts/db-enable.mjs",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
-    "db:index": "node --env-file=.env.local scripts/db-index.mjs",
-    "db:studio": "drizzle-kit studio",
-    "db:setup": "npm run db:enable && npm run db:generate && npm run db:migrate && npm run db:index"
+    "db:migrate:local": "wrangler d1 migrations apply koubo-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply koubo-db --remote"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
     "better-auth": "^1.6.13",
     "drizzle-orm": "^0.45.2",
     "kysely": "^0.28.17",
     "next": "^15.5.0",
-    "postgres": "^3.4.9",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -34,7 +29,6 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",

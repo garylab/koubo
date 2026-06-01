@@ -8,7 +8,7 @@ import {
   requireUserId,
 } from "@/lib/api-helpers";
 import { defer } from "@/lib/defer";
-import { recomputeScriptEmbeddingAndSimilarity } from "@/lib/similarity";
+import { recomputeScriptEmbedding } from "@/lib/similarity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       .returning();
 
     if (content.trim()) {
-      defer(recomputeScriptEmbeddingAndSimilarity(row.id));
+      defer(recomputeScriptEmbedding(row.id));
     }
     return Response.json(row, { status: 201 });
   } catch (err) {

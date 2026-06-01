@@ -1,26 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1780296662455,
-      "tag": "0000_nosy_kang",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1780315537818,
-      "tag": "0001_quick_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1780320000000,
-      "tag": "0002_rename_brand_to_collection",
+      "version": "6",
+      "when": 1780331477943,
+      "tag": "0000_silent_ben_urich",
       "breakpoints": true
     }
   ]

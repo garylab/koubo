@@ -8,7 +8,10 @@ import {
   requireUserId,
 } from "@/lib/api-helpers";
 import { defer } from "@/lib/defer";
-import { recomputeScriptEmbeddingAndSimilarity } from "@/lib/similarity";
+import {
+  deleteScriptEmbedding,
+  recomputeScriptEmbedding,
+} from "@/lib/similarity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,15 +42,20 @@ export async function PATCH(
 
     const patch: Partial<typeof script.$inferInsert> = { updatedAt: new Date() };
     let contentChanged = false;
+    let collectionChanged = false;
 
     if (typeof body.content === "string") {
       patch.content = body.content;
       contentChanged = body.content !== existing.content;
     }
 
-    if (typeof body.collectionId === "string" && body.collectionId !== existing.collectionId) {
+    if (
+      typeof body.collectionId === "string" &&
+      body.collectionId !== existing.collectionId
+    ) {
       await requireCollection(body.collectionId, userId);
       patch.collectionId = body.collectionId;
+      collectionChanged = true;
     }
 
     const db = getDb();
@@ -57,12 +65,14 @@ export async function PATCH(
       .where(eq(script.id, id))
       .returning();
 
+    // Re-embed if content changed (or refresh metadata when collection moved
+    // — Vectorize doesn't expose a partial-metadata update, easiest is to
+    // re-upsert with the existing vector via recompute).
     if (
-      contentChanged &&
-      typeof patch.content === "string" &&
-      patch.content.trim().length > 0
+      (contentChanged || collectionChanged) &&
+      (patch.content ?? existing.content).trim().length > 0
     ) {
-      defer(recomputeScriptEmbeddingAndSimilarity(id));
+      defer(recomputeScriptEmbedding(id));
     }
 
     return Response.json(row);
@@ -81,6 +91,7 @@ export async function DELETE(
     await requireScript(id, userId);
     const db = getDb();
     await db.delete(script).where(eq(script.id, id));
+    defer(deleteScriptEmbedding(id));
     return new Response(null, { status: 204 });
   } catch (err) {
     return jsonError(err);

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const db = getDb();
-    const result = await db.execute(sql`select 1 as ok, version() as version`);
+    const result = await db.all(sql`select 1 as ok`);
     return NextResponse.json({ ok: true, row: result[0] ?? null });
   } catch (err) {
     return NextResponse.json(

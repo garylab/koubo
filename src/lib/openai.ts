@@ -1,28 +1,27 @@
 import "server-only";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-const EMBED_MODEL = "text-embedding-3-small";
+// Embeddings via Cloudflare Workers AI (bge-m3, 1024-dim, multilingual incl. Chinese).
+export const EMBED_DIM = 1024;
+export const EMBED_MODEL = "@cf/baai/bge-m3" as const;
+
+// Chat completion stays on OpenAI for now — Workers AI text models lag in Chinese quality.
 export const CHAT_MODEL = "gpt-4o-mini";
 
-function apiKey(): string {
+function openaiKey(): string {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY not set");
   return key;
 }
 
 export async function embedText(text: string): Promise<number[]> {
-  const res = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey()}`,
-    },
-    body: JSON.stringify({ model: EMBED_MODEL, input: text }),
-  });
-  if (!res.ok) {
-    throw new Error(`embed failed: ${res.status} ${await res.text()}`);
-  }
-  const json = (await res.json()) as { data: { embedding: number[] }[] };
-  return json.data[0].embedding;
+  const { env } = getCloudflareContext();
+  const result = (await env.AI.run(EMBED_MODEL, { text: [text] })) as {
+    shape: number[];
+    data: number[][];
+  };
+  if (!result.data?.[0]) throw new Error("embedding response missing data[0]");
+  return result.data[0];
 }
 
 export async function streamChatCompletion(opts: {
@@ -34,7 +33,7 @@ export async function streamChatCompletion(opts: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey()}`,
+      Authorization: `Bearer ${openaiKey()}`,
     },
     body: JSON.stringify({
       model: CHAT_MODEL,

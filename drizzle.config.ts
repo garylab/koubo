@@ -1,18 +1,11 @@
-import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-config({ path: ".env.local" });
-config({ path: ".env" });
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set (check .env.local)");
-}
-
+// D1 is SQLite under the hood. drizzle-kit generates the migration SQL;
+// we apply it via `wrangler d1 execute koubo-db --file=<sql> [--local|--remote]`.
 export default defineConfig({
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",
-  dialect: "postgresql",
-  dbCredentials: { url: process.env.DATABASE_URL },
+  dialect: "sqlite",
   verbose: true,
   strict: true,
 });
