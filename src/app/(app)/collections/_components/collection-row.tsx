@@ -7,10 +7,9 @@ type Props = {
   id: string;
   name: string;
   isDefault: boolean;
-  updatedAt: string;
 };
 
-export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
+export function CollectionRow({ id, name, isDefault }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(name);
@@ -59,9 +58,6 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
             )}
           </div>
         )}
-        <div className="text-xs text-neutral-500 mt-0.5">
-          更新于 {new Date(updatedAt).toLocaleString("zh-CN")}
-        </div>
       </div>
       <div className="flex gap-3 text-xs shrink-0">
         {editing ? (

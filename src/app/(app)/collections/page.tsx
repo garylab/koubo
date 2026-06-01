@@ -4,6 +4,7 @@ import { collection } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { CollectionRow } from "./_components/collection-row";
 import { CreateCollectionForm } from "./_components/create-collection-form";
+import { BackButton } from "./_components/back-button";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +21,11 @@ export default async function CollectionsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 pt-4 space-y-1">
-      <div className="pb-2">
-        <h1 className="text-xl font-semibold">稿件集</h1>
-        <p className="text-xs text-neutral-500 mt-1">
-          稿件集用于把稿件分组。默认稿件集不可删除，但可以重命名。
-        </p>
+      <div className="pb-2 flex flex-wrap items-center gap-2">
+        <BackButton />
+        <h1 className="text-xl font-semibold mr-auto">稿件集</h1>
+        <CreateCollectionForm />
       </div>
-      <CreateCollectionForm />
       <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
         {collections.map((c) => (
           <CollectionRow
@@ -34,7 +33,6 @@ export default async function CollectionsPage() {
             id={c.id}
             name={c.name}
             isDefault={c.isDefault}
-            updatedAt={c.updatedAt.toISOString()}
           />
         ))}
       </ul>

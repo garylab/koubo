@@ -5,8 +5,8 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 export const EMBED_DIM = 1024;
 export const EMBED_MODEL = "@cf/baai/bge-m3" as const;
 
-// === Chat: Qwen 1.5 14B chat (AWQ-quantized) — best CN model on Workers AI ===
-export const CHAT_MODEL = "@cf/qwen/qwen1.5-14b-chat-awq" as const;
+// === Chat: Llama 3.3 70B Instruct (FP8, fast) ===
+export const CHAT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast" as const;
 
 export async function embedText(text: string): Promise<number[]> {
   const { env } = getCloudflareContext();

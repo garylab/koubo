@@ -12,6 +12,11 @@ export const getAuth = cache(() => {
     }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
+    trustedOrigins: [
+      "https://koubo.garymeng.com",
+      "https://koubo-dev.garymeng.com",
+      "http://localhost:7865",
+    ],
     emailAndPassword: { enabled: true, autoSignIn: true },
     socialProviders: {
       google: {

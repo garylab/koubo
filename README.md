@@ -57,7 +57,6 @@ http://localhost:3000/api/auth/callback/google
    npx wrangler secret put BETTER_AUTH_SECRET
    npx wrangler secret put GOOGLE_CLIENT_ID
    npx wrangler secret put GOOGLE_CLIENT_SECRET
-   npx wrangler secret put OPENAI_API_KEY
    ```
 2. **Google Cloud Console** → OAuth Client → Authorized redirect URIs 追加：
    ```
@@ -88,8 +87,8 @@ curl https://koubo.garymeng.com/api/health/db
 
 ## 后台 embedding 与相似度
 
-- 保存稿件时，`PATCH /api/scripts/[id]` 返回响应后通过 `ctx.waitUntil` 异步调用 OpenAI embeddings
-- embedding 写入 `script.embedding`（pgvector），同时计算品牌内 cosine 相似度 > 0.95 的其他稿件，双向写入 `script_similarity`
+- 保存稿件时，`PATCH /api/scripts/[id]` 返回响应后通过 `ctx.waitUntil` 异步调用 Workers AI `@cf/baai/bge-m3` 生成 embedding
+- embedding 写入 Vectorize，同时计算品牌内 cosine 相似度 > 0.95 的其他稿件，双向写入 `script_similarity`
 - 编辑页底部展示相似稿件，按相似度降序
 - 当前未用 Cloudflare Queues——单 Worker 模型更简单，30s `waitUntil` 上限足够单次 embedding；后续可迁移
 
@@ -114,7 +113,7 @@ src/
 ├── lib/
 │   ├── auth.ts, auth-client.ts, session.ts
 │   ├── db/{client,schema}.ts
-│   ├── openai.ts, similarity.ts
+│   ├── ai.ts, similarity.ts
 │   ├── api-helpers.ts, defer.ts
 ├── middleware.ts
 └── public/

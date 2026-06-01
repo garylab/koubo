@@ -26,6 +26,7 @@ export default async function ScriptPage({
         id: script.id,
         collectionId: script.collectionId,
         content: script.content,
+        status: script.status,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
       })
@@ -49,6 +50,7 @@ export default async function ScriptPage({
         scriptId={row.id}
         initialCollectionId={row.collectionId}
         initialContent={row.content}
+        initialStatus={row.status}
         embeddingUpdatedAt={row.embeddingUpdatedAt?.toISOString() ?? null}
         collections={collections}
       />

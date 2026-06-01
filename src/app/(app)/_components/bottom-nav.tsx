@@ -102,20 +102,17 @@ function CreateButton({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="flex flex-col items-center justify-center gap-0.5 py-1 text-[11px] text-neutral-500 dark:text-neutral-400"
       aria-label="新建稿件"
+      className="flex items-center justify-center py-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
     >
-      <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 shadow-sm">
-        <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
-          <path
-            d="M12 5v14M5 12h14"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-          />
-        </svg>
-      </span>
-      <span>新建</span>
+      <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" aria-hidden>
+        <path
+          d="M12 5v14M5 12h14"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     </Link>
   );
 }

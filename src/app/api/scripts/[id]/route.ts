@@ -12,6 +12,7 @@ import {
   deleteScriptEmbedding,
   recomputeScriptEmbedding,
 } from "@/lib/similarity";
+import { isScriptStatus } from "@/lib/script-status";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +39,11 @@ export async function PATCH(
     const { id } = await params;
     const userId = await requireUserId();
     const { script: existing } = await requireScript(id, userId);
-    const body = (await req.json()) as { content?: string; collectionId?: string };
+    const body = (await req.json()) as {
+      content?: string;
+      collectionId?: string;
+      status?: string;
+    };
 
     const patch: Partial<typeof script.$inferInsert> = { updatedAt: new Date() };
     let contentChanged = false;
@@ -56,6 +61,13 @@ export async function PATCH(
       await requireCollection(body.collectionId, userId);
       patch.collectionId = body.collectionId;
       collectionChanged = true;
+    }
+
+    if (body.status !== undefined) {
+      if (!isScriptStatus(body.status)) {
+        return Response.json({ error: "invalid status" }, { status: 400 });
+      }
+      patch.status = body.status;
     }
 
     const db = getDb();

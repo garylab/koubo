@@ -34,15 +34,15 @@ export function CreateCollectionForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 py-2"
+        className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
       >
-        + 新建稿件集
+        + 新建
       </button>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center gap-2 py-2">
+    <form onSubmit={onSubmit} className="order-last w-full flex items-center gap-2">
       <input
         autoFocus
         required

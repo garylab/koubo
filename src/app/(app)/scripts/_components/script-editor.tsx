@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  SCRIPT_STATUSES,
+  SCRIPT_STATUS_LABEL,
+  type ScriptStatus,
+} from "@/lib/script-status";
 
 type Props = {
   scriptId: string | null; // null = creating
   initialCollectionId: string;
   initialContent: string;
+  initialStatus: ScriptStatus;
   embeddingUpdatedAt: string | null;
   collections: { id: string; name: string }[];
 };
@@ -15,6 +21,7 @@ export function ScriptEditor({
   scriptId,
   initialCollectionId,
   initialContent,
+  initialStatus,
   collections,
 }: Props) {
   const router = useRouter();
@@ -22,6 +29,8 @@ export function ScriptEditor({
   const [savedContent, setSavedContent] = useState(initialContent);
   const [collectionId, setCollectionId] = useState(initialCollectionId);
   const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
+  const [status, setStatus] = useState<ScriptStatus>(initialStatus);
+  const [savedStatus, setSavedStatus] = useState<ScriptStatus>(initialStatus);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
 
@@ -29,7 +38,9 @@ export function ScriptEditor({
   const hasContent = content.trim().length > 0;
   const dirty = isNew
     ? hasContent
-    : content !== savedContent || collectionId !== savedCollectionId;
+    : content !== savedContent ||
+      collectionId !== savedCollectionId ||
+      status !== savedStatus;
   const canSave = dirty && hasContent;
 
   const [aiOpen, setAiOpen] = useState(false);
@@ -55,12 +66,13 @@ export function ScriptEditor({
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, collectionId }),
+      body: JSON.stringify({ content, collectionId, status }),
     });
     setBusy(null);
     if (!res.ok) return;
     setSavedContent(content);
     setSavedCollectionId(collectionId);
+    setSavedStatus(status);
     router.refresh();
   }
 
@@ -138,53 +150,7 @@ export function ScriptEditor({
             </svg>
           </button>
 
-          <div className="relative">
-            <select
-              value={collectionId}
-              onChange={(e) => setCollectionId(e.target.value)}
-              className="appearance-none bg-transparent text-sm font-medium pr-6 pl-2 py-1.5 outline-none cursor-pointer"
-            >
-              {collections.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="w-4 h-4 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500"
-              aria-hidden
-            >
-              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
           <div className="flex-1" />
-
-          <button
-            type="button"
-            onClick={runAi}
-            disabled={!hasContent || aiBusy}
-            aria-label="AI 优化"
-            className="w-10 h-10 inline-flex items-center justify-center rounded-md text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-30 disabled:hover:bg-transparent"
-          >
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
-              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-              <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          {canSave && (
-            <button
-              type="button"
-              onClick={save}
-              disabled={busy !== null}
-              className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 h-9 text-sm font-medium disabled:opacity-50"
-            >
-              {busy === "save" ? "…" : "保存"}
-            </button>
-          )}
 
           <button
             type="button"
@@ -218,13 +184,87 @@ export function ScriptEditor({
           onRetry={runAi}
         />
       ) : (
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="在此输入或粘贴你的视频稿…"
-          autoFocus={isNew}
-          className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-[15px] leading-relaxed outline-none resize-none min-h-[calc(100dvh-9rem)]"
-        />
+        <>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="在此输入或粘贴你的视频稿…"
+            autoFocus={isNew}
+            className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-[15px] leading-relaxed outline-none resize-none min-h-[50dvh]"
+          />
+
+          <div className="max-w-3xl mx-auto w-full px-4 py-4 space-y-4 border-t border-neutral-200 dark:border-neutral-800">
+            <div>
+              <div className="text-xs text-neutral-500 mb-2">稿件集</div>
+              <div className="flex flex-wrap gap-2">
+                {collections.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCollectionId(c.id)}
+                    className={
+                      "rounded-full px-3 py-1 text-sm border transition-colors " +
+                      (collectionId === c.id
+                        ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 border-neutral-900 dark:border-neutral-100"
+                        : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900")
+                    }
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {!isNew && (
+              <div>
+                <div className="text-xs text-neutral-500 mb-2">状态</div>
+                <div className="flex flex-wrap gap-2">
+                  {SCRIPT_STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatus(s)}
+                      className={
+                        "rounded-full px-3 py-1 text-sm border transition-colors " +
+                        (status === s
+                          ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 border-neutral-900 dark:border-neutral-100"
+                          : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900")
+                      }
+                    >
+                      {SCRIPT_STATUS_LABEL[s]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={runAi}
+                disabled={!hasContent || aiBusy}
+                className="inline-flex items-center gap-1.5 rounded-md px-3 h-9 text-sm font-medium text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-30 disabled:hover:bg-transparent"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" aria-hidden>
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                  <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                </svg>
+                AI 优化
+              </button>
+
+              <div className="flex-1" />
+
+              <button
+                type="button"
+                onClick={save}
+                disabled={!canSave || busy !== null}
+                className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 h-9 text-sm font-medium disabled:opacity-30"
+              >
+                {busy === "save" ? "…" : "保存"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

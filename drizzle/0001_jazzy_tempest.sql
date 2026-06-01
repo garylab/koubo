@@ -1,0 +1,1 @@
+ALTER TABLE `script` ADD `status` text DEFAULT 'unrecorded' NOT NULL;

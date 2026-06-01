@@ -116,6 +116,11 @@ export const script = sqliteTable(
       .notNull()
       .references(() => collection.id, { onDelete: "cascade" }),
     content: text("content").notNull().default(""),
+    status: text("status", {
+      enum: ["unrecorded", "recording", "recorded", "published"],
+    })
+      .notNull()
+      .default("unrecorded"),
     embeddingUpdatedAt: integer("embedding_updated_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()

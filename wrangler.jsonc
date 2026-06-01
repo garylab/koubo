@@ -27,10 +27,12 @@
   "vectorize": [
     {
       "binding": "VECTORIZE",
-      "index_name": "koubo-vec"
+      "index_name": "koubo-vec",
+      "remote": true
     }
   ],
   "ai": {
-    "binding": "AI"
+    "binding": "AI",
+    "remote": true
   }
 }

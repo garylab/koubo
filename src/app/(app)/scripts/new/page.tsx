@@ -35,6 +35,7 @@ export default async function NewScriptPage({
       scriptId={null}
       initialCollectionId={initialCollectionId}
       initialContent=""
+      initialStatus="unrecorded"
       embeddingUpdatedAt={null}
       collections={collections.map(({ id, name }) => ({ id, name }))}
     />

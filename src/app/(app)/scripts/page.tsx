@@ -1,78 +1,100 @@
-import Link from "next/link";
-import { and, desc, eq } from "drizzle-orm";
+import { Suspense } from "react";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { deriveTitle } from "@/lib/script-title";
+import { isScriptStatus, type ScriptStatus } from "@/lib/script-status";
 import { ScriptsHeader } from "./_components/scripts-header";
+import { ScriptsFilters, type SortKey } from "./_components/scripts-filters";
+import { ScriptListItem } from "./_components/script-list-item";
 
 export const dynamic = "force-dynamic";
 
 export default async function ScriptsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string }>;
+  searchParams: Promise<{ c?: string; s?: string; sort?: string }>;
 }) {
   const session = await getServerSession();
   if (!session) return null;
-  const { c: activeCollectionId } = await searchParams;
+  const sp = await searchParams;
+
+  const activeCollectionId = sp.c || null;
+
+  const statuses: ScriptStatus[] = sp.s
+    ? sp.s.split(",").filter(isScriptStatus)
+    : (["unrecorded", "recording", "recorded"] as ScriptStatus[]);
+
+  const sort: SortKey = sp.sort === "created" ? "created" : "updated";
+  const orderCol = sort === "created" ? script.createdAt : script.updatedAt;
 
   const db = getDb();
+  const filters = [eq(collection.userId, session.user.id)];
+  if (activeCollectionId) filters.push(eq(script.collectionId, activeCollectionId));
+  if (statuses.length > 0) filters.push(inArray(script.status, statuses));
+
   const [collections, scripts] = await Promise.all([
     db
       .select({ id: collection.id, name: collection.name })
       .from(collection)
       .where(eq(collection.userId, session.user.id))
       .orderBy(desc(collection.isDefault), desc(collection.updatedAt)),
-    db
-      .select({
-        id: script.id,
-        collectionId: script.collectionId,
-        collectionName: collection.name,
-        content: script.content,
-        updatedAt: script.updatedAt,
-        embeddingUpdatedAt: script.embeddingUpdatedAt,
-      })
-      .from(script)
-      .innerJoin(collection, eq(collection.id, script.collectionId))
-      .where(
-        activeCollectionId
-          ? and(
-              eq(collection.userId, session.user.id),
-              eq(script.collectionId, activeCollectionId),
-            )
-          : eq(collection.userId, session.user.id),
-      )
-      .orderBy(desc(script.updatedAt)),
+    statuses.length === 0
+      ? Promise.resolve([])
+      : db
+          .select({
+            id: script.id,
+            collectionId: script.collectionId,
+            collectionName: collection.name,
+            content: script.content,
+            status: script.status,
+            updatedAt: script.updatedAt,
+            createdAt: script.createdAt,
+            embeddingUpdatedAt: script.embeddingUpdatedAt,
+          })
+          .from(script)
+          .innerJoin(collection, eq(collection.id, script.collectionId))
+          .where(and(...filters))
+          .orderBy(desc(orderCol)),
   ]);
 
   return (
     <>
-      <ScriptsHeader collections={collections} />
-      <div className="max-w-3xl mx-auto px-4">
+      <ScriptsHeader />
+      <div className="max-w-3xl mx-auto px-4 pt-3 space-y-3">
+        <Suspense fallback={null}>
+          <ScriptsFilters
+            collections={collections}
+            collectionId={activeCollectionId}
+            statuses={statuses}
+            sort={sort}
+          />
+        </Suspense>
         {scripts.length === 0 ? (
           <p className="text-sm text-neutral-500 pt-10 text-center">
-            {activeCollectionId
-              ? "此稿件集还没有稿件"
-              : "还没有稿件，点底部 + 新建"}
+            没有符合条件的稿件
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
+          <ul className="-mx-4 divide-y divide-neutral-200 dark:divide-neutral-800">
             {scripts.map((s) => (
-              <li key={s.id}>
-                <Link
-                  href={`/scripts/${s.id}`}
-                  className="-mx-4 px-4 block py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                >
-                  <div className="font-medium truncate">
-                    {deriveTitle(s.content)}
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-0.5">
-                    {s.collectionName} ·{" "}
-                    {new Date(s.updatedAt).toLocaleString("zh-CN")}
-                  </div>
-                </Link>
-              </li>
+              <ScriptListItem
+                key={s.id}
+                id={s.id}
+                title={deriveTitle(s.content)}
+                collectionName={s.collectionName}
+                status={s.status as ScriptStatus}
+                timeLabel={new Date(
+                  sort === "created" ? s.createdAt : s.updatedAt,
+                ).toLocaleString("zh-CN", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
+              />
             ))}
           </ul>
         )}
@@ -80,3 +102,4 @@ export default async function ScriptsPage({
     </>
   );
 }
+
