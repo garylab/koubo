@@ -60,7 +60,7 @@ export function PullToRefresh({ children }: { children: ReactNode }) {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
-      style={{ overscrollBehaviorY: "contain" }}
+      style={{ overscrollBehaviorY: "contain", minHeight: "calc(100dvh - 6rem)" }}
     >
       <div
         style={{

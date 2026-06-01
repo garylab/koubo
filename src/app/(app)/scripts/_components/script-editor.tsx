@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const AUTOSAVE_DELAY = 1500;
 
 type Props = {
   scriptId: string | null; // null = creating
@@ -18,19 +20,85 @@ export function ScriptEditor({
   collections,
 }: Props) {
   const router = useRouter();
+  const isNew = scriptId === null;
+  const storageKey = `koubo:draft:${scriptId ?? "new"}`;
+
   const [content, setContent] = useState(initialContent);
   const [savedContent, setSavedContent] = useState(initialContent);
   const [collectionId, setCollectionId] = useState(initialCollectionId);
   const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
+  const [autosave, setAutosave] = useState<"idle" | "saving" | "saved">("idle");
+  const restoredOnce = useRef(false);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
 
-  const isNew = scriptId === null;
   const hasContent = content.trim().length > 0;
   const dirty = isNew
     ? hasContent
     : content !== savedContent || collectionId !== savedCollectionId;
   const canSave = dirty && hasContent;
+
+  // Restore local draft on mount (only if it differs from server content).
+  useEffect(() => {
+    if (restoredOnce.current) return;
+    restoredOnce.current = true;
+    if (typeof window === "undefined") return;
+    const draft = window.localStorage.getItem(storageKey);
+    if (draft && draft !== initialContent) {
+      setContent(draft);
+    }
+  }, [storageKey, initialContent]);
+
+  // Mirror content to localStorage so nothing is lost on tab close / crash.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (content === initialContent || !content) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+    window.localStorage.setItem(storageKey, content);
+  }, [content, initialContent, storageKey]);
+
+  // Debounced server autosave for existing scripts.
+  useEffect(() => {
+    if (isNew || !hasContent) return;
+    if (content === savedContent && collectionId === savedCollectionId) return;
+    const t = setTimeout(async () => {
+      setAutosave("saving");
+      const res = await fetch(`/api/scripts/${scriptId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, collectionId }),
+      });
+      if (!res.ok) {
+        setAutosave("idle");
+        return;
+      }
+      setSavedContent(content);
+      setSavedCollectionId(collectionId);
+      window.localStorage.removeItem(storageKey);
+      setAutosave("saved");
+      router.refresh();
+    }, AUTOSAVE_DELAY);
+    return () => clearTimeout(t);
+  }, [
+    content,
+    collectionId,
+    savedContent,
+    savedCollectionId,
+    hasContent,
+    isNew,
+    scriptId,
+    storageKey,
+    router,
+  ]);
+
+  // Drop "已保存" badge back to idle after a short while.
+  useEffect(() => {
+    if (autosave !== "saved") return;
+    const t = setTimeout(() => setAutosave("idle"), 1500);
+    return () => clearTimeout(t);
+  }, [autosave]);
 
   const [aiOpen, setAiOpen] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
@@ -49,6 +117,7 @@ export function ScriptEditor({
       setBusy(null);
       if (!res.ok) return;
       const data = (await res.json()) as { id: string };
+      window.localStorage.removeItem(storageKey);
       router.push(`/scripts/${data.id}`);
       return;
     }
@@ -61,6 +130,7 @@ export function ScriptEditor({
     if (!res.ok) return;
     setSavedContent(content);
     setSavedCollectionId(collectionId);
+    window.localStorage.removeItem(storageKey);
     router.refresh();
   }
 
@@ -218,6 +288,12 @@ export function ScriptEditor({
               </button>
 
               <div className="flex-1" />
+
+              {!isNew && autosave !== "idle" && (
+                <span className="text-xs text-neutral-500">
+                  {autosave === "saving" ? "保存中…" : "已保存"}
+                </span>
+              )}
 
               <button
                 type="button"

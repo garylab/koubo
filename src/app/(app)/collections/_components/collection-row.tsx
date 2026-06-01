@@ -137,7 +137,7 @@ export function CollectionRow({ id, name, isDefault }: Props) {
           transform: `translateX(${dragX}px)`,
           transition: dragX === -REVEAL || dragX === 0 ? "transform 0.18s" : "none",
         }}
-        className="relative bg-white dark:bg-neutral-950 py-3 flex items-center gap-3"
+        className="relative bg-white dark:bg-neutral-950 px-4 py-3 flex items-center gap-3"
       >
         <div className="flex-1 min-w-0">
           {editing ? (

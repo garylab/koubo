@@ -203,7 +203,7 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
               }
               setMenuOpen((v) => !v);
             }}
-            className={`shrink-0 font-medium px-2 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
+            className={`shrink-0 text-xs px-1.5 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
           >
             {SCRIPT_STATUS_LABEL[currentStatus]}
           </button>
@@ -221,7 +221,7 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
                     type="button"
                     onClick={() => changeStatus(s)}
                     className={
-                      "w-full text-left px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900 " +
+                      "block min-w-full text-left whitespace-nowrap px-5 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900 " +
                       (s === currentStatus
                         ? "text-neutral-900 dark:text-neutral-100 font-medium"
                         : "text-neutral-600 dark:text-neutral-300")
