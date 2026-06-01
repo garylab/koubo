@@ -4,6 +4,9 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: __dirname,
+  // Allow the Cloudflare tunnel host to talk to the Next.js dev server
+  // (HMR/_next/* requests come with that Host header).
+  allowedDevOrigins: ["koubo-dev.garymeng.com"],
 };
 
 // Emulate Cloudflare bindings only in `next dev`. During `next build`

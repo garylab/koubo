@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { deriveTitle } from "@/lib/script-title";
 
 type Props = {
   scriptId: string;
@@ -32,10 +31,6 @@ export function ScriptEditor({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiError, setAiError] = useState<string | null>(null);
-
-  useEffect(() => {
-    document.title = `${deriveTitle(content)} · Koubo`;
-  }, [content]);
 
   async function save() {
     setBusy("save");
@@ -105,10 +100,7 @@ export function ScriptEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-lg font-medium truncate flex-1 min-w-0">
-          {deriveTitle(content)}
-        </h1>
+      <div className="flex items-center justify-end gap-3 flex-wrap">
         <div className="flex items-center gap-2 text-xs">
           <select
             value={collectionId}
