@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
 };
 
-initOpenNextCloudflareForDev();
+// Emulate Cloudflare bindings only in `next dev`. During `next build`
+// (incl. CF Workers Builds) there's no local Hyperdrive conn string and
+// the emulator would throw an unhandledRejection.
+if (process.env.NODE_ENV !== "production") {
+  initOpenNextCloudflareForDev();
+}
 
 export default nextConfig;
