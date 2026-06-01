@@ -42,7 +42,7 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
   }
 
   return (
-    <li className="rounded-md border border-neutral-200 dark:border-neutral-800 p-3 flex items-center justify-between gap-3">
+    <li className="py-3 flex items-center justify-between gap-3">
       <div className="flex-1 min-w-0">
         {editing ? (
           <input
@@ -59,17 +59,17 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
             )}
           </div>
         )}
-        <div className="text-xs text-neutral-500">
+        <div className="text-xs text-neutral-500 mt-0.5">
           更新于 {new Date(updatedAt).toLocaleString("zh-CN")}
         </div>
       </div>
-      <div className="flex gap-2 text-xs">
+      <div className="flex gap-3 text-xs shrink-0">
         {editing ? (
           <>
             <button
               onClick={rename}
               disabled={busy}
-              className="rounded bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-2 py-1 disabled:opacity-50"
+              className="text-neutral-900 dark:text-neutral-100 disabled:opacity-50"
             >
               保存
             </button>
@@ -78,7 +78,7 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
                 setVal(name);
                 setEditing(false);
               }}
-              className="rounded border border-neutral-300 dark:border-neutral-700 px-2 py-1"
+              className="text-neutral-500"
             >
               取消
             </button>
@@ -87,7 +87,7 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
           <>
             <button
               onClick={() => setEditing(true)}
-              className="rounded border border-neutral-300 dark:border-neutral-700 px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+              className="text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100"
             >
               重命名
             </button>
@@ -95,7 +95,7 @@ export function CollectionRow({ id, name, isDefault, updatedAt }: Props) {
               <button
                 onClick={remove}
                 disabled={busy}
-                className="rounded border border-red-300 text-red-600 dark:border-red-900 px-2 py-1 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
+                className="text-red-600 dark:text-red-400 disabled:opacity-50"
               >
                 删除
               </button>

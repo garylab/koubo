@@ -49,20 +49,20 @@ export default async function ScriptsPage({
   return (
     <>
       <ScriptsHeader collections={collections} />
-      <div className="max-w-3xl mx-auto px-4 pt-4 space-y-3">
+      <div className="max-w-3xl mx-auto px-4">
         {scripts.length === 0 ? (
-          <p className="text-sm text-neutral-500 pt-6 text-center">
+          <p className="text-sm text-neutral-500 pt-10 text-center">
             {activeCollectionId
               ? "此稿件集还没有稿件"
               : "还没有稿件，点底部 + 新建"}
           </p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
             {scripts.map((s) => (
               <li key={s.id}>
                 <Link
                   href={`/scripts/${s.id}`}
-                  className="block rounded-xl border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                  className="-mx-4 px-4 block py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
                 >
                   <div className="font-medium truncate">
                     {deriveTitle(s.content)}
