@@ -46,22 +46,9 @@ export default async function ScriptsPage({
       .orderBy(desc(script.updatedAt)),
   ]);
 
-  const href = activeCollectionId
-    ? `/scripts/new?c=${activeCollectionId}`
-    : "/scripts/new";
-
   return (
     <div className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">稿件</h1>
-        <Link
-          href={href}
-          className="rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 py-1.5 text-sm font-medium"
-        >
-          + 新建
-        </Link>
-      </div>
-
+      <h1 className="text-xl font-semibold">稿件</h1>
       <CollectionChips collections={collections} />
 
       {scripts.length === 0 ? (
