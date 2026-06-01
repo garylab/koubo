@@ -10,7 +10,7 @@ export function CollectionChips({ collections }: { collections: Collection[] }) 
   const active = params.get("c") ?? null;
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 py-1">
+    <div className="flex items-center gap-2 overflow-x-auto">
       <Chip href="/scripts" label="全部" active={active === null} />
       {collections.map((c) => (
         <Chip

@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { deriveTitle } from "@/lib/script-title";
-import { CollectionChips } from "../_components/collection-chips";
+import { ScriptsHeader } from "./_components/scripts-header";
 
 export const dynamic = "force-dynamic";
 
@@ -47,33 +47,36 @@ export default async function ScriptsPage({
   ]);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-      <h1 className="text-xl font-semibold">稿件</h1>
-      <CollectionChips collections={collections} />
-
-      {scripts.length === 0 ? (
-        <p className="text-sm text-neutral-500 pt-6 text-center">
-          {activeCollectionId
-            ? "此稿件集还没有稿件"
-            : "还没有稿件，点右上角新建"}
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {scripts.map((s) => (
-            <li key={s.id}>
-              <Link
-                href={`/scripts/${s.id}`}
-                className="block rounded-xl border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
-              >
-                <div className="font-medium truncate">{deriveTitle(s.content)}</div>
-                <div className="text-xs text-neutral-500 mt-0.5">
-                  {s.collectionName} · {new Date(s.updatedAt).toLocaleString("zh-CN")}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <>
+      <ScriptsHeader collections={collections} />
+      <div className="max-w-3xl mx-auto px-4 pt-4 space-y-3">
+        {scripts.length === 0 ? (
+          <p className="text-sm text-neutral-500 pt-6 text-center">
+            {activeCollectionId
+              ? "此稿件集还没有稿件"
+              : "还没有稿件，点底部 + 新建"}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {scripts.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/scripts/${s.id}`}
+                  className="block rounded-xl border border-neutral-200 dark:border-neutral-800 p-3 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                >
+                  <div className="font-medium truncate">
+                    {deriveTitle(s.content)}
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-0.5">
+                    {s.collectionName} ·{" "}
+                    {new Date(s.updatedAt).toLocaleString("zh-CN")}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

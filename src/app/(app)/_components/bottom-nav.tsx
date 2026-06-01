@@ -13,7 +13,11 @@ type NavItem = {
 const SCRIPTS: NavItem = {
   href: "/scripts",
   label: "稿件",
-  matches: (p) => p === "/scripts" || p.startsWith("/scripts"),
+  matches: (p) =>
+    p === "/scripts" ||
+    p.startsWith("/scripts") ||
+    p === "/collections" ||
+    p.startsWith("/collections/"),
   icon: (
     <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
       <path
@@ -40,12 +44,9 @@ const SCRIPTS: NavItem = {
 
 const ME: NavItem = {
   href: "/me",
-  // /collections is now a sub-section of /me, so it lights up the 我的 tab too.
-  matches: (p) =>
-    p === "/me" ||
-    p.startsWith("/me/") ||
-    p === "/collections" ||
-    p.startsWith("/collections/"),
+  // /collections is reached from the 稿件 header's settings icon, so it
+  // belongs to the 稿件 tab now — no fallthrough here.
+  matches: (p) => p === "/me" || p.startsWith("/me/"),
   label: "我的",
   icon: (
     <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>

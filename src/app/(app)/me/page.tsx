@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getServerSession } from "@/lib/session";
 import { SignOutButton } from "../_components/sign-out-button";
 import { ProfileForm } from "./_components/profile-form";
@@ -20,17 +19,6 @@ export default async function MePage() {
       />
 
       <PasswordChangeForm />
-
-      <Link
-        href="/collections"
-        className="rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 flex items-center justify-between hover:bg-neutral-100 dark:hover:bg-neutral-900"
-      >
-        <div>
-          <div className="text-sm font-medium">稿件集</div>
-          <div className="text-xs text-neutral-500">管理稿件分组，重命名或删除</div>
-        </div>
-        <span className="text-neutral-400">›</span>
-      </Link>
 
       <SignOutButton />
     </div>
