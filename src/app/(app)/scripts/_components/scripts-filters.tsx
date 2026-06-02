@@ -86,7 +86,7 @@ export function ScriptsFilters({
       <select
         value={collectionId ?? ""}
         onChange={(e) => update({ c: e.target.value || null })}
-        className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm px-2 py-1.5 outline-none"
+        className="bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5 outline-none cursor-pointer"
       >
         <option value="">全部稿件集</option>
         {collections.map((c) => (
@@ -156,7 +156,7 @@ function StatusMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-transparent text-sm px-2 py-1.5"
+        className="inline-flex items-center gap-1 bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5"
       >
         {label}
         <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-neutral-500" aria-hidden>
