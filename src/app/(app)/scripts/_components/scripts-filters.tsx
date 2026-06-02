@@ -82,8 +82,8 @@ export function ScriptsFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-neutral-500 dark:text-neutral-400">筛选</span>
+    <div className="flex flex-wrap items-center gap-1">
+      <span className="text-xs text-neutral-500 dark:text-neutral-400">稿件集</span>
       <select
         value={collectionId ?? ""}
         onChange={(e) => update({ c: e.target.value || null })}
@@ -97,6 +97,7 @@ export function ScriptsFilters({
         ))}
       </select>
 
+      <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1">状态</span>
       <StatusMultiSelect
         value={statuses}
         onChange={(next) =>
