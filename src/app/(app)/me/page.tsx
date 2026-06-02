@@ -6,6 +6,16 @@ import { MeHeader } from "./_components/me-header";
 
 export const dynamic = "force-dynamic";
 
+function buildLabel() {
+  const id = process.env.NEXT_PUBLIC_BUILD_ID;
+  if (!id) return "dev";
+  const n = Number(id);
+  if (!Number.isFinite(n)) return id;
+  const d = new Date(n);
+  const pad = (x: number) => String(x).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default async function MePage() {
   const session = await getServerSession();
   if (!session) return null;
@@ -23,6 +33,9 @@ export default async function MePage() {
         </div>
         <div className="pt-8">
           <SignOutButton />
+        </div>
+        <div className="pt-6 text-center text-xs text-neutral-400 dark:text-neutral-600">
+          版本 {buildLabel()}
         </div>
       </div>
     </>
