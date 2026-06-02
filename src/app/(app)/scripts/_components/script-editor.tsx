@@ -349,7 +349,7 @@ export function ScriptEditor({
           <div
             ref={aiMenuRef}
             className="fixed left-1/2 -translate-x-1/2 z-40"
-            style={{ bottom: "calc(env(safe-area-inset-bottom) + 9rem)" }}
+            style={{ bottom: "calc(env(safe-area-inset-bottom) + 7.5rem)" }}
           >
             <button
               type="button"
