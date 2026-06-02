@@ -86,7 +86,7 @@ export function ScriptsFilters({
       <select
         value={collectionId ?? ""}
         onChange={(e) => update({ c: e.target.value || null })}
-        className="bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5 outline-none cursor-pointer"
+        className="bg-transparent text-sm text-neutral-500 dark:text-neutral-400 px-1 py-1.5 outline-none cursor-pointer"
       >
         <option value="">全部稿件集</option>
         {collections.map((c) => (
@@ -103,17 +103,20 @@ export function ScriptsFilters({
         }
       />
 
-      <select
-        value={sort}
-        onChange={(e) => update({ sort: e.target.value === "created" ? null : e.target.value })}
-        className="ml-auto bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5 outline-none cursor-pointer"
-      >
-        {(["created", "updated"] as SortKey[]).map((k) => (
-          <option key={k} value={k}>
-            {SORT_LABEL[k]}
-          </option>
-        ))}
-      </select>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">排序</span>
+        <select
+          value={sort}
+          onChange={(e) => update({ sort: e.target.value === "created" ? null : e.target.value })}
+          className="bg-transparent text-sm text-neutral-500 dark:text-neutral-400 px-1 py-1.5 outline-none cursor-pointer"
+        >
+          {(["created", "updated"] as SortKey[]).map((k) => (
+            <option key={k} value={k}>
+              {SORT_LABEL[k]}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
@@ -156,7 +159,7 @@ function StatusMultiSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5"
+        className="inline-flex items-center gap-1 bg-transparent text-sm text-neutral-500 dark:text-neutral-400 px-1 py-1.5"
       >
         {label}
         <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-neutral-500" aria-hidden>
