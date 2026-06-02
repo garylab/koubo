@@ -9,6 +9,7 @@ import {
   SCRIPT_STATUS_LABEL,
   type ScriptStatus,
 } from "@/lib/script-status";
+import { formatRelative } from "@/lib/relative-time";
 
 const REVEAL = 88;
 const STATUS_TONE: Record<ScriptStatus, string> = {
@@ -22,13 +23,20 @@ type Props = {
   id: string;
   title: string;
   collectionName: string;
-  timeLabel: string;
+  time: number;
   status: ScriptStatus;
 };
 
 type Axis = null | "h" | "v";
 
-export function ScriptListItem({ id, title, collectionName, timeLabel, status }: Props) {
+export function ScriptListItem({ id, title, collectionName, time, status }: Props) {
+  const [timeLabel, setTimeLabel] = useState(() => formatRelative(time));
+  useEffect(() => {
+    setTimeLabel(formatRelative(time));
+    const tick = setInterval(() => setTimeLabel(formatRelative(time)), 30_000);
+    return () => clearInterval(tick);
+  }, [time]);
+
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<ScriptStatus>(status);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -172,6 +180,10 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
         type="button"
         onClick={remove}
         disabled={busy}
+        style={{
+          opacity: Math.min(1, -dragX / REVEAL),
+          pointerEvents: dragX < 0 ? "auto" : "none",
+        }}
         className="absolute right-0 top-0 bottom-0 w-[88px] flex items-center justify-center bg-red-600 text-white text-sm disabled:opacity-50"
       >
         删除
@@ -189,25 +201,8 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
           transform: `translateX(${dragX}px)`,
           transition: dragX === -REVEAL || dragX === 0 ? "transform 0.18s" : "none",
         }}
-        className="relative bg-white dark:bg-neutral-950 flex items-center"
+        className="relative bg-white dark:bg-neutral-950"
       >
-        <div className="pl-4 py-3">
-          <button
-            ref={badgeRef}
-            type="button"
-            onClick={() => {
-              if (open) {
-                setDragX(0);
-                setOpen(false);
-                return;
-              }
-              setMenuOpen((v) => !v);
-            }}
-            className={`shrink-0 text-xs px-1.5 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
-          >
-            {SCRIPT_STATUS_LABEL[currentStatus]}
-          </button>
-        </div>
         {menuOpen && menuPos && typeof document !== "undefined"
           ? createPortal(
               <div
@@ -238,9 +233,28 @@ export function ScriptListItem({ id, title, collectionName, timeLabel, status }:
         <Link
           href={`/scripts/${id}`}
           onClick={onLinkClick}
-          className="flex-1 min-w-0 px-3 py-3 block hover:bg-neutral-50 dark:hover:bg-neutral-900"
+          className="block px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
         >
-          <div className="font-medium truncate">{title}</div>
+          <div className="font-medium flex items-center gap-2 min-w-0">
+            <span className="truncate">{title}</span>
+            <button
+              ref={badgeRef}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (open) {
+                  setDragX(0);
+                  setOpen(false);
+                  return;
+                }
+                setMenuOpen((v) => !v);
+              }}
+              className={`shrink-0 text-xs px-1.5 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
+            >
+              {SCRIPT_STATUS_LABEL[currentStatus]}
+            </button>
+          </div>
           <div className="text-xs text-neutral-500 mt-0.5">
             {collectionName} · {timeLabel}
           </div>

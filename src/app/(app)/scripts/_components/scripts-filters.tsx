@@ -93,10 +93,10 @@ export function ScriptsFilters({
 
       <select
         value={sort}
-        onChange={(e) => update({ sort: e.target.value === "updated" ? null : e.target.value })}
+        onChange={(e) => update({ sort: e.target.value === "created" ? null : e.target.value })}
         className="ml-auto bg-transparent text-sm text-neutral-600 dark:text-neutral-300 px-1 py-1.5 outline-none cursor-pointer"
       >
-        {(["updated", "created"] as SortKey[]).map((k) => (
+        {(["created", "updated"] as SortKey[]).map((k) => (
           <option key={k} value={k}>
             {SORT_LABEL[k]}
           </option>

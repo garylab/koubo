@@ -1,25 +1,24 @@
 import { requireUserId, jsonError } from "@/lib/api-helpers";
 import { streamChatCompletion } from "@/lib/ai";
+import { AI_MODE_PROMPT, isAiMode, type AiMode } from "@/lib/ai-modes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SYSTEM_PROMPT = `你是口播视频稿优化助手。请重写用户提供的视频稿，让它：
-1. 更口语化、节奏更自然，适合录制；
-2. 保留原意，不要添加新的事实信息；
-3. 句子短而有力，避免书面语；
-4. 直接返回优化后的文本，不要任何前后说明或标题。`;
-
 export async function POST(req: Request) {
   try {
     await requireUserId();
-    const { content } = (await req.json()) as { content?: string };
+    const { content, mode } = (await req.json()) as {
+      content?: string;
+      mode?: string;
+    };
     if (!content || typeof content !== "string" || !content.trim()) {
       return Response.json({ error: "content required" }, { status: 400 });
     }
+    const aiMode: AiMode = isAiMode(mode) ? mode : "optimize";
 
     const upstream = await streamChatCompletion({
-      system: SYSTEM_PROMPT,
+      system: AI_MODE_PROMPT[aiMode],
       user: content,
     });
 

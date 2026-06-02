@@ -27,8 +27,8 @@ export default async function ScriptsPage({
     ? sp.s.split(",").filter(isScriptStatus)
     : (["unrecorded", "recording", "recorded"] as ScriptStatus[]);
 
-  const sort: SortKey = sp.sort === "created" ? "created" : "updated";
-  const orderCol = sort === "created" ? script.createdAt : script.updatedAt;
+  const sort: SortKey = sp.sort === "updated" ? "updated" : "created";
+  const orderCol = sort === "updated" ? script.updatedAt : script.createdAt;
 
   const db = getDb();
   const filters = [eq(collection.userId, session.user.id)];
@@ -64,7 +64,7 @@ export default async function ScriptsPage({
     <>
       <ScriptsHeader />
       <PullToRefresh>
-        <div className="max-w-3xl mx-auto px-4 pt-3 space-y-3">
+        <div className="max-w-3xl mx-auto px-4 pt-6 space-y-3">
         <Suspense fallback={null}>
           <ScriptsFilters
             collections={collections}
@@ -86,16 +86,9 @@ export default async function ScriptsPage({
                 title={deriveTitle(s.content)}
                 collectionName={s.collectionName}
                 status={s.status as ScriptStatus}
-                timeLabel={new Date(
+                time={new Date(
                   sort === "created" ? s.createdAt : s.updatedAt,
-                ).toLocaleString("zh-CN", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
+                ).getTime()}
               />
             ))}
           </ul>

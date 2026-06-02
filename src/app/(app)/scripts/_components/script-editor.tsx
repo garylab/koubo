@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AI_MODES,
+  AI_MODE_HINT,
+  AI_MODE_LABEL,
+  type AiMode,
+} from "@/lib/ai-modes";
 
 const AUTOSAVE_DELAY = 1500;
 
@@ -31,6 +37,18 @@ export function ScriptEditor({
   const restoredOnce = useRef(false);
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    if (!hasContent) return;
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      // ignore
+    }
+  }
 
   const hasContent = content.trim().length > 0;
   const dirty = isNew
@@ -104,6 +122,18 @@ export function ScriptEditor({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiMode, setAiMode] = useState<AiMode>("optimize");
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
+  const aiMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!aiMenuRef.current || aiMenuRef.current.contains(e.target as Node)) return;
+      setAiMenuOpen(false);
+    }
+    if (aiMenuOpen) document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [aiMenuOpen]);
 
   async function save() {
     if (!canSave) return;
@@ -145,8 +175,10 @@ export function ScriptEditor({
     if (res.ok) router.push("/scripts");
   }
 
-  async function runAi() {
+  async function runAi(mode: AiMode = aiMode) {
     if (!content.trim()) return;
+    setAiMode(mode);
+    setAiMenuOpen(false);
     setAiOpen(true);
     setAiSuggestion("");
     setAiError(null);
@@ -155,7 +187,7 @@ export function ScriptEditor({
       const res = await fetch("/api/ai/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, mode }),
       });
       if (!res.ok || !res.body) {
         const j = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -210,6 +242,42 @@ export function ScriptEditor({
 
           <div className="flex-1" />
 
+          {!isNew && autosave !== "idle" && (
+            <span className="text-xs text-neutral-500 px-1">
+              {autosave === "saving" ? "保存中…" : "已保存"}
+            </span>
+          )}
+
+          {canSave && (
+            <button
+              type="button"
+              onClick={save}
+              disabled={busy !== null}
+              className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 h-9 text-sm font-medium disabled:opacity-30"
+            >
+              {busy === "save" ? "…" : "保存"}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={copy}
+            disabled={!hasContent}
+            aria-label="复制全部内容"
+            className="w-10 h-10 inline-flex items-center justify-center rounded-md text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 disabled:opacity-30"
+          >
+            {copied ? (
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-emerald-600" aria-hidden>
+                <path d="M5 12l4 4 10-10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+                <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M5 15V6a2 2 0 0 1 2-2h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={remove}
@@ -232,6 +300,7 @@ export function ScriptEditor({
 
       {aiOpen ? (
         <AICompare
+          mode={aiMode}
           content={content}
           onChange={setContent}
           aiSuggestion={aiSuggestion}
@@ -239,11 +308,11 @@ export function ScriptEditor({
           aiError={aiError}
           onAccept={accept}
           onReject={reject}
-          onRetry={runAi}
+          onRetry={() => runAi(aiMode)}
         />
       ) : (
         <>
-          <div className="max-w-3xl mx-auto w-full px-4 pt-3 flex flex-wrap gap-2">
+          <div className="max-w-3xl mx-auto w-full px-4 pt-6 flex flex-wrap gap-2">
             {collections.map((c) => {
               const active = collectionId === c.id;
               return (
@@ -269,41 +338,45 @@ export function ScriptEditor({
             onChange={(e) => setContent(e.target.value)}
             placeholder="在此输入或粘贴你的视频稿…"
             autoFocus={isNew}
-            className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-base leading-relaxed outline-none resize-none min-h-[50dvh]"
+            className="max-w-3xl mx-auto w-full px-4 pt-6 pb-40 bg-transparent text-lg leading-relaxed outline-none resize-none min-h-[60dvh]"
           />
 
-          <div className="max-w-3xl mx-auto w-full px-4 py-4 border-t border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={runAi}
-                disabled={!hasContent || aiBusy}
-                className="inline-flex items-center gap-1.5 rounded-md px-3 h-9 text-sm font-medium text-violet-600 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950 disabled:opacity-30 disabled:hover:bg-transparent"
-              >
-                <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" aria-hidden>
-                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-                  <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-                </svg>
-                AI 优化
-              </button>
-
-              <div className="flex-1" />
-
-              {!isNew && autosave !== "idle" && (
-                <span className="text-xs text-neutral-500">
-                  {autosave === "saving" ? "保存中…" : "已保存"}
-                </span>
-              )}
-
-              <button
-                type="button"
-                onClick={save}
-                disabled={!canSave || busy !== null}
-                className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-4 h-9 text-sm font-medium disabled:opacity-30"
-              >
-                {busy === "save" ? "…" : "保存"}
-              </button>
-            </div>
+          <div
+            ref={aiMenuRef}
+            className="fixed left-1/2 -translate-x-1/2 z-40"
+            style={{ bottom: "calc(env(safe-area-inset-bottom) + 6rem)" }}
+          >
+            <button
+              type="button"
+              onClick={() => setAiMenuOpen((v) => !v)}
+              disabled={!hasContent || aiBusy}
+              className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 text-white px-4 h-10 text-sm font-medium shadow-lg shadow-violet-600/30 hover:bg-violet-700 disabled:opacity-40"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" aria-hidden>
+                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                <path d="M19 14l.7 2.1L22 17l-2.3.9L19 20l-.7-2.1L16 17l2.3-.9L19 14z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+              AI
+            </button>
+            {aiMenuOpen && (
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
+                {AI_MODES.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => runAi(m)}
+                    className="block w-full text-left whitespace-nowrap px-4 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                  >
+                    <span className="text-neutral-900 dark:text-neutral-100">
+                      {AI_MODE_LABEL[m]}
+                    </span>
+                    <span className="text-xs text-neutral-500 ml-1">
+                      / {AI_MODE_HINT[m]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -312,6 +385,7 @@ export function ScriptEditor({
 }
 
 function AICompare({
+  mode,
   content,
   onChange,
   aiSuggestion,
@@ -321,6 +395,7 @@ function AICompare({
   onReject,
   onRetry,
 }: {
+  mode: AiMode;
   content: string;
   onChange: (v: string) => void;
   aiSuggestion: string;
@@ -342,7 +417,7 @@ function AICompare({
       </section>
       <section>
         <div className="text-xs text-neutral-500 mb-1 flex items-center gap-2">
-          AI 建议
+          AI 建议 · {AI_MODE_LABEL[mode]}
           {aiBusy && <span className="text-violet-600">流式生成中…</span>}
         </div>
         <div className="w-full min-h-[30vh] rounded-md border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/30 p-3 text-sm leading-relaxed font-mono overflow-y-auto whitespace-pre-wrap">

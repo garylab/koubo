@@ -107,6 +107,10 @@ export function CollectionRow({ id, name, isDefault }: Props) {
           type="button"
           onClick={remove}
           disabled={busy}
+          style={{
+            opacity: Math.min(1, -dragX / REVEAL),
+            pointerEvents: dragX < 0 ? "auto" : "none",
+          }}
           className="absolute right-0 top-0 bottom-0 w-[88px] flex items-center justify-center bg-red-600 text-white text-sm disabled:opacity-50"
         >
           删除

@@ -70,7 +70,7 @@ export function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40 border-t border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
     >
       <div className="mx-auto max-w-3xl grid grid-cols-3">
         <NavTab item={SCRIPTS} active={SCRIPTS.matches(pathname)} />
