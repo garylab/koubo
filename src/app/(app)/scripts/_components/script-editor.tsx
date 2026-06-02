@@ -8,6 +8,7 @@ import {
   AI_MODE_LABEL,
   type AiMode,
 } from "@/lib/ai-modes";
+import { markScriptsDirty } from "@/lib/list-refresh";
 
 const AUTOSAVE_DELAY = 1500;
 
@@ -96,7 +97,7 @@ export function ScriptEditor({
       setSavedCollectionId(collectionId);
       window.localStorage.removeItem(storageKey);
       setAutosave("saved");
-      router.refresh();
+      markScriptsDirty();
     }, AUTOSAVE_DELAY);
     return () => clearTimeout(t);
   }, [
@@ -148,6 +149,7 @@ export function ScriptEditor({
       if (!res.ok) return;
       const data = (await res.json()) as { id: string };
       window.localStorage.removeItem(storageKey);
+      markScriptsDirty();
       router.replace(`/scripts/${data.id}`);
       return;
     }
@@ -161,7 +163,7 @@ export function ScriptEditor({
     setSavedContent(content);
     setSavedCollectionId(collectionId);
     window.localStorage.removeItem(storageKey);
-    router.refresh();
+    markScriptsDirty();
   }
 
   async function remove() {
@@ -172,7 +174,10 @@ export function ScriptEditor({
     if (!confirm("确定删除此稿件？")) return;
     setBusy("delete");
     const res = await fetch(`/api/scripts/${scriptId}`, { method: "DELETE" });
-    if (res.ok) router.push("/scripts");
+    if (res.ok) {
+      markScriptsDirty();
+      router.push("/scripts");
+    }
   }
 
   async function runAi(mode: AiMode = aiMode) {
@@ -344,7 +349,7 @@ export function ScriptEditor({
           <div
             ref={aiMenuRef}
             className="fixed left-1/2 -translate-x-1/2 z-40"
-            style={{ bottom: "calc(env(safe-area-inset-bottom) + 6rem)" }}
+            style={{ bottom: "calc(env(safe-area-inset-bottom) + 9rem)" }}
           >
             <button
               type="button"

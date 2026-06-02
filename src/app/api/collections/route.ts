@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection } from "@/lib/db/schema";
@@ -34,6 +35,8 @@ export async function POST(req: Request) {
       .insert(collection)
       .values({ userId, name, isDefault: false })
       .returning();
+    revalidatePath("/collections");
+    revalidatePath("/scripts");
     return Response.json(row, { status: 201 });
   } catch (err) {
     return jsonError(err);

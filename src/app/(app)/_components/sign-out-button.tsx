@@ -8,6 +8,7 @@ export function SignOutButton() {
   return (
     <button
       onClick={async () => {
+        if (!confirm("确定退出登录？")) return;
         await signOut();
         router.push("/login");
         router.refresh();

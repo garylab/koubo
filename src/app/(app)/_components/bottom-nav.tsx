@@ -21,22 +21,18 @@ const SCRIPTS: NavItem = {
   icon: (
     <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
       <path
-        d="M6 4h9l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 4v5h5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8.5 13h7M8.5 16.5h7"
+        d="M3.5 11.5 12 4l8.5 7.5"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 10.5V20a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   ),

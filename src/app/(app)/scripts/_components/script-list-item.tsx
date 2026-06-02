@@ -10,6 +10,7 @@ import {
   type ScriptStatus,
 } from "@/lib/script-status";
 import { formatRelative } from "@/lib/relative-time";
+import { markScriptsDirty } from "@/lib/list-refresh";
 
 const REVEAL = 88;
 const STATUS_TONE: Record<ScriptStatus, string> = {
@@ -163,6 +164,7 @@ export function ScriptListItem({ id, title, collectionName, time, status }: Prop
       setCurrentStatus(prev);
       return;
     }
+    markScriptsDirty();
     router.refresh();
   }
 
@@ -171,7 +173,10 @@ export function ScriptListItem({ id, title, collectionName, time, status }: Prop
     setBusy(true);
     const res = await fetch(`/api/scripts/${id}`, { method: "DELETE" });
     setBusy(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      markScriptsDirty();
+      router.refresh();
+    }
   }
 
   return (

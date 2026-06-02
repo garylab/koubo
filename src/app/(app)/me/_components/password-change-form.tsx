@@ -49,10 +49,10 @@ export function PasswordChangeForm() {
 
   if (!open) {
     return (
-      <div className="py-3 flex items-center justify-between gap-3">
+      <div className="py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-neutral-500 w-14 shrink-0">密码</span>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="text-xs text-neutral-500 w-12 shrink-0">密码</span>
+          <span className="font-medium text-neutral-700 dark:text-neutral-200">
             {msg?.kind === "ok" ? msg.text : "••••••••"}
           </span>
         </div>
@@ -70,7 +70,7 @@ export function PasswordChangeForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="py-3 space-y-3">
+    <form onSubmit={onSubmit} className="py-4 space-y-3">
       <div className="text-sm text-neutral-500">修改密码</div>
       <input
         type="password"

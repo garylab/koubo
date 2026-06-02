@@ -13,12 +13,6 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["koubo-dev.garymeng.com"],
   generateBuildId: async () => BUILD_ID,
   env: { NEXT_PUBLIC_BUILD_ID: BUILD_ID },
-  // Disable Next's client-side router cache for dynamic pages so navigating
-  // back to a page (e.g. /scripts after autosaving in the editor) re-fetches
-  // fresh server data instead of showing a stale RSC payload.
-  experimental: {
-    staleTimes: { dynamic: 0, static: 0 },
-  },
 };
 
 // Emulate Cloudflare bindings only in `next dev`. During `next build`

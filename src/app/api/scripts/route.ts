@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
@@ -71,6 +72,7 @@ export async function POST(req: Request) {
     if (content.trim()) {
       defer(recomputeScriptEmbedding(row.id));
     }
+    revalidatePath("/scripts");
     return Response.json(row, { status: 201 });
   } catch (err) {
     return jsonError(err);

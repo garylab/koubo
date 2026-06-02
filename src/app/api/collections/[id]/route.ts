@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection } from "@/lib/db/schema";
@@ -23,6 +24,8 @@ export async function PATCH(
       .set({ name, updatedAt: new Date() })
       .where(eq(collection.id, id))
       .returning();
+    revalidatePath("/collections");
+    revalidatePath("/scripts");
     return Response.json(row);
   } catch (err) {
     return jsonError(err);
@@ -45,6 +48,8 @@ export async function DELETE(
     }
     const db = getDb();
     await db.delete(collection).where(eq(collection.id, id));
+    revalidatePath("/collections");
+    revalidatePath("/scripts");
     return new Response(null, { status: 204 });
   } catch (err) {
     return jsonError(err);

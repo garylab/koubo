@@ -4,6 +4,7 @@ import { collection } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { CollectionRow } from "./_components/collection-row";
 import { CollectionsHeader } from "./_components/collections-header";
+import { RefreshOnDirty } from "./_components/refresh-on-dirty";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function CollectionsPage() {
   return (
     <>
       <CollectionsHeader />
+      <RefreshOnDirty />
       <div className="max-w-3xl mx-auto px-4 pt-3">
         <ul className="-mx-4 divide-y divide-neutral-200 dark:divide-neutral-800">
           {collections.map((c) => (

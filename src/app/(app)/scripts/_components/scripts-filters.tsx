@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { SCRIPTS_DIRTY_KEY } from "@/lib/list-refresh";
 
 const STORAGE_KEY = "koubo:scripts-filters";
 
@@ -42,6 +43,17 @@ export function ScriptsFilters({
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (!saved) return;
     router.replace(`/scripts?${saved}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If a mutation elsewhere left a "dirty" flag, refresh on arrival so we
+  // don't show a stale router-cached payload.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem(SCRIPTS_DIRTY_KEY)) {
+      window.localStorage.removeItem(SCRIPTS_DIRTY_KEY);
+      router.refresh();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

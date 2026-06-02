@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { markCollectionsDirty, markScriptsDirty } from "@/lib/list-refresh";
 
 const REVEAL = 88;
 
@@ -80,7 +81,11 @@ export function CollectionRow({ id, name, isDefault }: Props) {
     });
     setBusy(false);
     setEditing(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      markCollectionsDirty();
+      markScriptsDirty();
+      router.refresh();
+    }
   }
 
   async function remove() {
@@ -88,7 +93,11 @@ export function CollectionRow({ id, name, isDefault }: Props) {
     setBusy(true);
     const res = await fetch(`/api/collections/${id}`, { method: "DELETE" });
     setBusy(false);
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      markCollectionsDirty();
+      markScriptsDirty();
+      router.refresh();
+    }
   }
 
   function startEdit() {

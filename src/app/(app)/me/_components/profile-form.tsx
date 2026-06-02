@@ -38,13 +38,13 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="py-3 space-y-3">
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-neutral-500 w-14 shrink-0">昵称</span>
+    <form onSubmit={onSubmit}>
+      <div className="py-4 flex items-center gap-3">
+        <span className="text-xs text-neutral-500 w-12 shrink-0">昵称</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 bg-transparent text-sm outline-none border-b border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 py-1"
+          className="flex-1 bg-transparent font-medium outline-none border-b border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 py-0.5"
         />
         {dirty && (
           <button
@@ -56,16 +56,16 @@ export function ProfileForm({
           </button>
         )}
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-neutral-500 w-14 shrink-0">邮箱</span>
-        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="py-4 flex items-center gap-3 border-t border-neutral-200 dark:border-neutral-800">
+        <span className="text-xs text-neutral-500 w-12 shrink-0">邮箱</span>
+        <span className="font-medium text-neutral-700 dark:text-neutral-200">
           {email}
         </span>
       </div>
       {msg && (
         <div
           className={
-            "text-xs " +
+            "pb-2 text-xs " +
             (msg.kind === "ok" ? "text-emerald-600" : "text-red-600")
           }
         >

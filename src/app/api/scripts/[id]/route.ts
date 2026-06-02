@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { script } from "@/lib/db/schema";
@@ -87,6 +88,8 @@ export async function PATCH(
       defer(recomputeScriptEmbedding(id));
     }
 
+    revalidatePath("/scripts");
+    revalidatePath(`/scripts/${id}`);
     return Response.json(row);
   } catch (err) {
     return jsonError(err);
@@ -104,6 +107,8 @@ export async function DELETE(
     const db = getDb();
     await db.delete(script).where(eq(script.id, id));
     defer(deleteScriptEmbedding(id));
+    revalidatePath("/scripts");
+    revalidatePath(`/scripts/${id}`);
     return new Response(null, { status: 204 });
   } catch (err) {
     return jsonError(err);

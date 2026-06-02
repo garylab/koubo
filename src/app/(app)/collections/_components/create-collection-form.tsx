@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { markCollectionsDirty, markScriptsDirty } from "@/lib/list-refresh";
 
 export function CreateCollectionForm() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export function CreateCollectionForm() {
     }
     setName("");
     setOpen(false);
+    markCollectionsDirty();
+    markScriptsDirty();
     router.refresh();
   }
 
