@@ -65,15 +65,23 @@ export function ScriptEditor({
     : content !== savedContent || collectionId !== savedCollectionId;
   const canSave = dirty && hasContent;
 
-  // Restore local draft on mount (only if it differs from server content).
+  // On mount, reconcile local draft with the server-rendered initialContent.
+  // The Next.js client router cache can serve a stale RSC payload after we've
+  // autosaved (so initialContent might be older than what we actually have).
+  // Treat localStorage as the source of truth when it diverges; clear it only
+  // when the server caught up.
   useEffect(() => {
     if (restoredOnce.current) return;
     restoredOnce.current = true;
     if (typeof window === "undefined") return;
     const draft = window.localStorage.getItem(storageKey);
-    if (draft && draft !== initialContent) {
-      setContent(draft);
+    if (draft == null) return;
+    if (draft === initialContent) {
+      window.localStorage.removeItem(storageKey);
+      return;
     }
+    setContent(draft);
+    setSavedContent(draft);
   }, [storageKey, initialContent]);
 
   // Mirror content to localStorage so nothing is lost on tab close / crash.
@@ -103,7 +111,9 @@ export function ScriptEditor({
       }
       setSavedContent(content);
       setSavedCollectionId(collectionId);
-      window.localStorage.removeItem(storageKey);
+      // Don't clear the draft yet — keep it so a stale RSC payload on the
+      // next mount can be corrected. It'll be cleared on the next mount when
+      // initialContent (fresh from server) matches.
       setAutosave("saved");
       markScriptsDirty();
     }, AUTOSAVE_DELAY);
@@ -170,7 +180,8 @@ export function ScriptEditor({
     if (!res.ok) return;
     setSavedContent(content);
     setSavedCollectionId(collectionId);
-    window.localStorage.removeItem(storageKey);
+    // Same as autosave: keep the draft until the next mount can confirm
+    // server is up to date.
     markScriptsDirty();
   }
 
@@ -183,6 +194,7 @@ export function ScriptEditor({
     setBusy("delete");
     const res = await fetch(`/api/scripts/${scriptId}`, { method: "DELETE" });
     if (res.ok) {
+      window.localStorage.removeItem(storageKey);
       markScriptsDirty();
       router.push("/scripts");
     }
