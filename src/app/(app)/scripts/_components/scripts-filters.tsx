@@ -83,12 +83,13 @@ export function ScriptsFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs text-neutral-500 dark:text-neutral-400">筛选</span>
       <select
         value={collectionId ?? ""}
         onChange={(e) => update({ c: e.target.value || null })}
         className="bg-transparent text-sm text-neutral-500 dark:text-neutral-400 px-1 py-1.5 outline-none cursor-pointer"
       >
-        <option value="">全部稿件集</option>
+        <option value="">全部</option>
         {collections.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
@@ -147,12 +148,12 @@ function StatusMultiSelect({
 
   const allSelected = value.length === SCRIPT_STATUSES.length;
   const label = allSelected
-    ? "全部状态"
+    ? "全部"
     : value.length === 0
-      ? "未选状态"
+      ? "无"
       : value.length === 1
         ? SCRIPT_STATUS_LABEL[value[0]]
-        : `${value.length} 个状态`;
+        : `${value.length} 个`;
 
   return (
     <div ref={ref} className="relative">
