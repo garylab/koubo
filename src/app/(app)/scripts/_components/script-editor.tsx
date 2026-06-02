@@ -148,7 +148,7 @@ export function ScriptEditor({
       if (!res.ok) return;
       const data = (await res.json()) as { id: string };
       window.localStorage.removeItem(storageKey);
-      router.push(`/scripts/${data.id}`);
+      router.replace(`/scripts/${data.id}`);
       return;
     }
     const res = await fetch(`/api/scripts/${scriptId}`, {
