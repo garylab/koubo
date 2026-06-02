@@ -39,6 +39,14 @@ export function ScriptEditor({
 
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
   const [copied, setCopied] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function selectAll() {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.focus();
+    el.select();
+  }
 
   async function copy() {
     if (!hasContent) return;
@@ -266,6 +274,24 @@ export function ScriptEditor({
 
           <button
             type="button"
+            onClick={selectAll}
+            disabled={!hasContent}
+            aria-label="全选内容"
+            className="w-10 h-10 inline-flex items-center justify-center rounded-md text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 disabled:opacity-30"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden>
+              <path
+                d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <rect x="8" y="8" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
             onClick={copy}
             disabled={!hasContent}
             aria-label="复制全部内容"
@@ -339,6 +365,7 @@ export function ScriptEditor({
           </div>
 
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="在此输入或粘贴你的视频稿…"
