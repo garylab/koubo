@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
+/* Make Tailwind's `dark:` variant respond to a `.dark` ancestor class
+   (manual toggle) instead of only the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light dark;
+}
+.dark {
+  color-scheme: dark;
+}
+html:not(.dark) {
+  color-scheme: light;
 }
 
 html,

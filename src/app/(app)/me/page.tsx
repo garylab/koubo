@@ -3,6 +3,7 @@ import { SignOutButton } from "../_components/sign-out-button";
 import { ProfileForm } from "./_components/profile-form";
 import { PasswordChangeForm } from "./_components/password-change-form";
 import { MeHeader } from "./_components/me-header";
+import { ThemeSwitcher } from "./_components/theme-switcher";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default async function MePage() {
             email={session.user.email}
           />
           <PasswordChangeForm />
+          <ThemeSwitcher />
         </div>
         <div className="pt-8">
           <SignOutButton />
