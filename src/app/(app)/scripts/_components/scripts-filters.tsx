@@ -66,6 +66,7 @@ export function ScriptsFilters({
     }
     const qs = usp.toString();
     router.push(qs ? `/scripts?${qs}` : "/scripts");
+    router.refresh();
   }
 
   return (

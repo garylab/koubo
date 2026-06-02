@@ -243,6 +243,27 @@ export function ScriptEditor({
         />
       ) : (
         <>
+          <div className="max-w-3xl mx-auto w-full px-4 pt-3 flex flex-wrap gap-2">
+            {collections.map((c) => {
+              const active = collectionId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCollectionId(c.id)}
+                  className={
+                    "rounded-full px-3 py-1 text-sm border transition-colors " +
+                    (active
+                      ? "border-neutral-900 dark:border-neutral-100 text-neutral-900 dark:text-neutral-100"
+                      : "border-neutral-300 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100")
+                  }
+                >
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -251,29 +272,8 @@ export function ScriptEditor({
             className="max-w-3xl mx-auto w-full px-4 py-4 bg-transparent text-base leading-relaxed outline-none resize-none min-h-[50dvh]"
           />
 
-          <div className="max-w-3xl mx-auto w-full px-4 py-4 space-y-4 border-t border-neutral-200 dark:border-neutral-800">
-            <div>
-              <div className="text-xs text-neutral-500 mb-2">稿件集</div>
-              <div className="flex flex-wrap gap-2">
-                {collections.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setCollectionId(c.id)}
-                    className={
-                      "rounded-full px-3 py-1 text-sm border transition-colors " +
-                      (collectionId === c.id
-                        ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 border-neutral-900 dark:border-neutral-100"
-                        : "border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900")
-                    }
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-<div className="flex items-center gap-2 pt-2">
+          <div className="max-w-3xl mx-auto w-full px-4 py-4 border-t border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={runAi}
