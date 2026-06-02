@@ -97,7 +97,7 @@ export function ScriptsFilters({
         ))}
       </select>
 
-      <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1">状态</span>
+      <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-4">状态</span>
       <StatusMultiSelect
         value={statuses}
         onChange={(next) =>
