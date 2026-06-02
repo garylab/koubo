@@ -261,17 +261,6 @@ export function ScriptEditor({
             </span>
           )}
 
-          {canSave && (
-            <button
-              type="button"
-              onClick={save}
-              disabled={busy !== null}
-              className="rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 h-9 text-sm font-medium disabled:opacity-30"
-            >
-              {busy === "save" ? "…" : "保存"}
-            </button>
-          )}
-
           <button
             type="button"
             onClick={selectAll}
@@ -373,9 +362,21 @@ export function ScriptEditor({
             className="max-w-3xl mx-auto w-full px-4 pt-6 pb-40 bg-transparent text-lg leading-relaxed outline-none resize-none min-h-[60dvh]"
           />
 
+          {canSave && (
+            <button
+              type="button"
+              onClick={save}
+              disabled={busy !== null}
+              className="fixed left-4 z-40 rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-5 h-10 text-sm font-medium shadow-lg disabled:opacity-40"
+              style={{ bottom: "calc(env(safe-area-inset-bottom) + 7.5rem)" }}
+            >
+              {busy === "save" ? "…" : "保存"}
+            </button>
+          )}
+
           <div
             ref={aiMenuRef}
-            className="fixed left-1/2 -translate-x-1/2 z-40"
+            className="fixed right-4 z-40"
             style={{ bottom: "calc(env(safe-area-inset-bottom) + 7.5rem)" }}
           >
             <button
@@ -391,7 +392,7 @@ export function ScriptEditor({
               AI
             </button>
             {aiMenuOpen && (
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
+              <div className="absolute right-0 bottom-full mb-2 w-max rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
                 {AI_MODES.map((m) => (
                   <button
                     key={m}
