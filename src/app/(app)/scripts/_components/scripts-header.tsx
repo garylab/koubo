@@ -1,10 +1,44 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export function ScriptsHeader() {
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY.current;
+        // Don't hide near the top — the gesture is too easy to trigger.
+        if (y < 64) {
+          setHidden(false);
+        } else if (dy > 4) {
+          setHidden(true);
+        } else if (dy < -4) {
+          setHidden(false);
+        }
+        lastY.current = y;
+        ticking = false;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <header
-      className="sticky top-0 z-30 border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      className="sticky top-0 z-30 border-b border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur transition-transform duration-200"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        transform: hidden ? "translateY(-100%)" : "translateY(0)",
+      }}
     >
       <div className="max-w-3xl mx-auto px-4 h-12 flex items-center gap-3">
         <Link
