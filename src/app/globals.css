@@ -26,11 +26,14 @@ body {
 }
 
 /* Prevent iOS Safari from zooming the page when focusing an input/textarea/select.
-   The trigger is font-size < 16px, so force every form control to be at least 16px. */
-input,
-textarea,
-select {
-  font-size: 16px;
+   The trigger is font-size < 16px. Apply at the base layer so Tailwind text-*
+   utilities can still override upward (e.g. text-lg, text-xl). */
+@layer base {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 /* Hide scrollbars (mobile-first PWA); scrolling itself still works. */
