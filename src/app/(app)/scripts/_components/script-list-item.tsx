@@ -242,7 +242,6 @@ export function ScriptListItem({ id, title, preview, collectionName, time, statu
           className="block px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
         >
           <div className="font-medium flex items-center gap-2 min-w-0">
-            <span className="truncate">{title}</span>
             <button
               ref={badgeRef}
               type="button"
@@ -256,10 +255,11 @@ export function ScriptListItem({ id, title, preview, collectionName, time, statu
                 }
                 setMenuOpen((v) => !v);
               }}
-              className={`shrink-0 text-xs px-1.5 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
+              className={`shrink-0 px-2 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
             >
               {SCRIPT_STATUS_LABEL[currentStatus]}
             </button>
+            <span className="truncate">{title}</span>
           </div>
           {preview && (
             <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 truncate">
