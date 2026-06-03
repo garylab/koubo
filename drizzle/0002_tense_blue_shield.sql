@@ -1,0 +1,1 @@
+ALTER TABLE `script` ADD `title` text;

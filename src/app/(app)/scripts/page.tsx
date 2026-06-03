@@ -48,6 +48,7 @@ export default async function ScriptsPage({
             id: script.id,
             collectionId: script.collectionId,
             collectionName: collection.name,
+            title: script.title,
             content: script.content,
             status: script.status,
             updatedAt: script.updatedAt,
@@ -83,7 +84,8 @@ export default async function ScriptsPage({
               <ScriptListItem
                 key={s.id}
                 id={s.id}
-                title={deriveTitle(s.content)}
+                title={s.title?.trim() || deriveTitle(s.content)}
+                preview={s.content}
                 collectionName={s.collectionName}
                 status={s.status as ScriptStatus}
                 time={new Date(

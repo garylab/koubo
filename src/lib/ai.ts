@@ -38,3 +38,35 @@ export async function streamChatCompletion(opts: {
   })) as ReadableStream<Uint8Array>;
   return stream;
 }
+
+const TITLE_PROMPT = `你是给视频稿件起标题的助手。读完用户给的稿件内容，给一个最多 10 个中文字的标题，要求：
+- 直接概括内容，不要营销词、不要悬念、不要标点符号
+- 不要带书名号、引号、冒号、emoji
+- 最多 10 个中文字，超过就不合格
+- 只返回标题本身，不要任何其他文字、说明、Markdown`;
+
+/**
+ * Generate a short Chinese title (≤ 10 chars) from script content.
+ * Strips quotes/punctuation/whitespace and truncates to 10 chars as a safety
+ * net in case the model ignores the constraint.
+ */
+export async function generateTitle(content: string): Promise<string> {
+  const { env } = getCloudflareContext();
+  const trimmed = content.trim().slice(0, 2000);
+  if (!trimmed) return "";
+  const res = (await env.AI.run(CHAT_MODEL, {
+    messages: [
+      { role: "system", content: TITLE_PROMPT },
+      { role: "user", content: trimmed },
+    ],
+    stream: false,
+    max_tokens: 40,
+  })) as { response?: string };
+  let title = (res.response ?? "").trim();
+  // Strip surrounding quotes/brackets/punctuation the model might add.
+  title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
+  // Cap length conservatively (10 chars, counting any unicode codepoint).
+  const chars = Array.from(title);
+  if (chars.length > 10) title = chars.slice(0, 10).join("");
+  return title;
+}

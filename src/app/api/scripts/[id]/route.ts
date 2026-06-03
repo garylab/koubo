@@ -44,6 +44,7 @@ export async function PATCH(
       content?: string;
       collectionId?: string;
       status?: string;
+      title?: string;
     };
 
     const patch: Partial<typeof script.$inferInsert> = { updatedAt: new Date() };
@@ -53,6 +54,11 @@ export async function PATCH(
     if (typeof body.content === "string") {
       patch.content = body.content;
       contentChanged = body.content !== existing.content;
+    }
+
+    if (typeof body.title === "string") {
+      const trimmed = body.title.trim();
+      patch.title = trimmed || null;
     }
 
     if (

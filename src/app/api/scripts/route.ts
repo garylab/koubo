@@ -10,6 +10,7 @@ import {
 } from "@/lib/api-helpers";
 import { defer } from "@/lib/defer";
 import { recomputeScriptEmbedding } from "@/lib/similarity";
+import { generateTitle } from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,6 +72,19 @@ export async function POST(req: Request) {
 
     if (content.trim()) {
       defer(recomputeScriptEmbedding(row.id));
+      defer(
+        (async () => {
+          const title = await generateTitle(content);
+          if (!title) return;
+          const db2 = getDb();
+          await db2
+            .update(script)
+            .set({ title, updatedAt: new Date() })
+            .where(eq(script.id, row.id));
+          revalidatePath("/scripts");
+          revalidatePath(`/scripts/${row.id}`);
+        })(),
+      );
     }
     revalidatePath("/scripts");
     return Response.json(row, { status: 201 });

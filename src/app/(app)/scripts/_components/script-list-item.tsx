@@ -23,6 +23,7 @@ const STATUS_TONE: Record<ScriptStatus, string> = {
 type Props = {
   id: string;
   title: string;
+  preview: string;
   collectionName: string;
   time: number;
   status: ScriptStatus;
@@ -30,7 +31,7 @@ type Props = {
 
 type Axis = null | "h" | "v";
 
-export function ScriptListItem({ id, title, collectionName, time, status }: Props) {
+export function ScriptListItem({ id, title, preview, collectionName, time, status }: Props) {
   const [timeLabel, setTimeLabel] = useState(() => formatRelative(time));
   useEffect(() => {
     setTimeLabel(formatRelative(time));
@@ -260,6 +261,11 @@ export function ScriptListItem({ id, title, collectionName, time, status }: Prop
               {SCRIPT_STATUS_LABEL[currentStatus]}
             </button>
           </div>
+          {preview && (
+            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 truncate">
+              {preview}
+            </div>
+          )}
           <div className="text-xs text-neutral-500 mt-0.5">
             {collectionName} · {timeLabel}
           </div>

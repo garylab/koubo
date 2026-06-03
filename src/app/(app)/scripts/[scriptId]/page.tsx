@@ -25,6 +25,7 @@ export default async function ScriptPage({
       .select({
         id: script.id,
         collectionId: script.collectionId,
+        title: script.title,
         content: script.content,
         updatedAt: script.updatedAt,
         embeddingUpdatedAt: script.embeddingUpdatedAt,
@@ -48,6 +49,7 @@ export default async function ScriptPage({
       <ScriptEditor
         scriptId={row.id}
         initialCollectionId={row.collectionId}
+        initialTitle={row.title ?? ""}
         initialContent={row.content}
         embeddingUpdatedAt={row.embeddingUpdatedAt?.toISOString() ?? null}
         collections={collections}

@@ -15,6 +15,7 @@ const AUTOSAVE_DELAY = 1500;
 type Props = {
   scriptId: string | null; // null = creating
   initialCollectionId: string;
+  initialTitle: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
   collections: { id: string; name: string }[];
@@ -23,6 +24,7 @@ type Props = {
 export function ScriptEditor({
   scriptId,
   initialCollectionId,
+  initialTitle,
   initialContent,
   collections,
 }: Props) {
@@ -32,6 +34,8 @@ export function ScriptEditor({
 
   const [content, setContent] = useState(initialContent);
   const [savedContent, setSavedContent] = useState(initialContent);
+  const [title, setTitle] = useState(initialTitle);
+  const [savedTitle, setSavedTitle] = useState(initialTitle);
   const [collectionId, setCollectionId] = useState(initialCollectionId);
   const [savedCollectionId, setSavedCollectionId] = useState(initialCollectionId);
   const [autosave, setAutosave] = useState<"idle" | "saving" | "saved">("idle");
@@ -62,8 +66,21 @@ export function ScriptEditor({
   const hasContent = content.trim().length > 0;
   const dirty = isNew
     ? hasContent
-    : content !== savedContent || collectionId !== savedCollectionId;
+    : content !== savedContent ||
+      collectionId !== savedCollectionId ||
+      title !== savedTitle;
   const canSave = dirty && hasContent;
+
+  // When the server-generated title arrives (after defer-create) and the
+  // user hasn't typed their own, adopt it.
+  useEffect(() => {
+    if (!initialTitle) return;
+    if (title === "" || title === savedTitle) {
+      setTitle(initialTitle);
+      setSavedTitle(initialTitle);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTitle]);
 
   // On mount, reconcile local draft with the server-rendered initialContent.
   // The Next.js client router cache can serve a stale RSC payload after we've
@@ -97,13 +114,18 @@ export function ScriptEditor({
   // Debounced server autosave for existing scripts.
   useEffect(() => {
     if (isNew || !hasContent) return;
-    if (content === savedContent && collectionId === savedCollectionId) return;
+    if (
+      content === savedContent &&
+      collectionId === savedCollectionId &&
+      title === savedTitle
+    )
+      return;
     const t = setTimeout(async () => {
       setAutosave("saving");
       const res = await fetch(`/api/scripts/${scriptId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, collectionId }),
+        body: JSON.stringify({ content, collectionId, title }),
       });
       if (!res.ok) {
         setAutosave("idle");
@@ -111,6 +133,7 @@ export function ScriptEditor({
       }
       setSavedContent(content);
       setSavedCollectionId(collectionId);
+      setSavedTitle(title);
       // Don't clear the draft yet — keep it so a stale RSC payload on the
       // next mount can be corrected. It'll be cleared on the next mount when
       // initialContent (fresh from server) matches.
@@ -121,8 +144,10 @@ export function ScriptEditor({
   }, [
     content,
     collectionId,
+    title,
     savedContent,
     savedCollectionId,
+    savedTitle,
     hasContent,
     isNew,
     scriptId,
@@ -174,12 +199,13 @@ export function ScriptEditor({
     const res = await fetch(`/api/scripts/${scriptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, collectionId }),
+      body: JSON.stringify({ content, collectionId, title }),
     });
     setBusy(null);
     if (!res.ok) return;
     setSavedContent(content);
     setSavedCollectionId(collectionId);
+    setSavedTitle(title);
     // Same as autosave: keep the draft until the next mount can confirm
     // server is up to date.
     markScriptsDirty();
@@ -365,13 +391,23 @@ export function ScriptEditor({
             })}
           </div>
 
+          {!isNew && (
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value.slice(0, 20))}
+              placeholder="稿件标题"
+              maxLength={20}
+              className="max-w-3xl mx-auto w-full px-4 pt-6 bg-transparent text-xl font-semibold outline-none"
+            />
+          )}
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="在此输入或粘贴你的视频稿…"
             autoFocus={isNew}
-            className="max-w-3xl mx-auto w-full px-4 pt-6 pb-40 bg-transparent text-lg leading-relaxed outline-none resize-none min-h-[60dvh]"
+            className="max-w-3xl mx-auto w-full px-4 pt-4 pb-40 bg-transparent text-lg leading-relaxed outline-none resize-none min-h-[60dvh]"
           />
 
           {canSave && (

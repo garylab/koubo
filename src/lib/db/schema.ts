@@ -115,6 +115,7 @@ export const script = sqliteTable(
     collectionId: text("collection_id")
       .notNull()
       .references(() => collection.id, { onDelete: "cascade" }),
+    title: text("title"),
     content: text("content").notNull().default(""),
     status: text("status", {
       enum: ["unrecorded", "recording", "recorded", "published"],

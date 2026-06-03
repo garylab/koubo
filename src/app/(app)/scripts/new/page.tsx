@@ -34,6 +34,7 @@ export default async function NewScriptPage({
     <ScriptEditor
       scriptId={null}
       initialCollectionId={initialCollectionId}
+      initialTitle=""
       initialContent=""
       embeddingUpdatedAt={null}
       collections={collections.map(({ id, name }) => ({ id, name }))}
