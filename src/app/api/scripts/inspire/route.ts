@@ -17,13 +17,14 @@ export async function POST(req: Request) {
   try {
     const userId = await requireUserId();
     const body = (await req.json().catch(() => ({}))) as {
-      collectionId?: string;
+      collectionId?: number;
     };
 
     const db = getDb();
 
     const filters = [eq(collection.userId, userId)];
-    if (body.collectionId) filters.push(eq(script.collectionId, body.collectionId));
+    if (typeof body.collectionId === "number")
+      filters.push(eq(script.collectionId, body.collectionId));
 
     // Equivalent of "pick a random offset, take 5 contiguous rows" — avoids
     // ORDER BY RANDOM()'s full-table sort. id is a UUID so we can't do
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     }
 
     let collectionName: string | null = null;
-    if (body.collectionId) {
+    if (typeof body.collectionId === "number") {
       const [c] = await db
         .select({ name: collection.name })
         .from(collection)

@@ -16,7 +16,7 @@ export default async function CollectionsPage() {
   const collections = await db
     .select()
     .from(collection)
-    .where(eq(collection.userId, session.user.id))
+    .where(eq(collection.userId, Number(session.user.id)))
     .orderBy(desc(collection.isDefault), desc(collection.updatedAt));
 
   return (
