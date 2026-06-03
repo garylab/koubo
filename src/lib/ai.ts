@@ -75,7 +75,7 @@ export async function inspireScript(opts: {
 任务：
 - 选题在用户已有的话题领域内，但是一个**新角度、新切入点**，不要重复或改写样本里的任何一篇。
 - 标题最多 10 个中文字，不要标点、不要书名号、引号、emoji。
-- 内容是这条创意的一句话核心点子（**严格不超过 30 个中文字**），只是给作者一个起头/钩子，不是完整稿件。
+- 内容是这条创意的一句话核心点子（**严格不超过 40 个中文字**），只是给作者一个起头/钩子，不是完整稿件。
 - 内容必须口语，禁止"因此/然而/通过/旨在/进行"。
 
 输出格式严格如下（除此之外不输出任何文字、说明、Markdown）：
@@ -104,7 +104,7 @@ TITLE: <标题>
     if (tchars.length > 10) title = tchars.slice(0, 10).join("");
     let content = m[2].trim();
     const cchars = Array.from(content);
-    if (cchars.length > 30) content = cchars.slice(0, 30).join("");
+    if (cchars.length > 40) content = cchars.slice(0, 40).join("");
     return { title, content };
   }
   // Fallback: treat first line as title.
@@ -112,7 +112,7 @@ TITLE: <标题>
   const firstLine = lines[0].replace(/^TITLE:\s*/i, "").trim();
   const rest = lines.slice(1).join("\n").replace(/^---\s*\n?/m, "").trim();
   const ft = Array.from(firstLine).slice(0, 10).join("");
-  const fc = Array.from(rest || raw).slice(0, 30).join("");
+  const fc = Array.from(rest || raw).slice(0, 40).join("");
   return { title: ft, content: fc };
 }
 

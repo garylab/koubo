@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { markScriptsDirty } from "@/lib/list-refresh";
 
@@ -37,12 +37,6 @@ export function InspirePage() {
       setBusy(false);
     }
   }
-
-  // Kick off the first suggestion on mount.
-  useEffect(() => {
-    inspire();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   async function accept() {
     if (!draft) return;
@@ -89,9 +83,14 @@ export function InspirePage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 pt-6 pb-40 min-h-[60dvh]">
+      <div className="max-w-3xl mx-auto px-4 pt-10 pb-40 min-h-[60dvh]">
+        {!draft && !busy && !error && (
+          <div className="py-10 text-center text-sm text-neutral-500">
+            点击下方的「启发」按钮，AI 会从你已有的稿件里推一个新的创意。
+          </div>
+        )}
         {busy && (
-          <div className="py-8 text-center text-sm text-neutral-500">
+          <div className="py-10 text-center text-sm text-neutral-500">
             正在从你的稿件里找灵感…
           </div>
         )}
@@ -117,18 +116,20 @@ export function InspirePage() {
           type="button"
           onClick={inspire}
           disabled={busy || accepting}
-          className="rounded-full bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 px-5 h-10 text-sm font-medium shadow disabled:opacity-40"
-        >
-          {busy ? "…" : "再启发"}
-        </button>
-        <button
-          type="button"
-          onClick={accept}
-          disabled={!draft || busy || accepting}
           className="rounded-full bg-violet-600 text-white px-5 h-10 text-sm font-medium shadow-lg shadow-violet-600/30 disabled:opacity-40"
         >
-          {accepting ? "…" : "采纳"}
+          {busy ? "…" : draft ? "再启发" : "启发"}
         </button>
+        {draft && (
+          <button
+            type="button"
+            onClick={accept}
+            disabled={busy || accepting}
+            className="rounded-full bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-5 h-10 text-sm font-medium shadow-lg disabled:opacity-40"
+          >
+            {accepting ? "…" : "采纳"}
+          </button>
+        )}
       </div>
 
       {toast && (
