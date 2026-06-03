@@ -7,6 +7,8 @@ import { inspireScript } from "@/lib/ai";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const SAMPLE_SIZE = 5;
+
 // POST /api/scripts/inspire
 // Body: { collectionId?: string }
 // Returns { title, content } — does NOT write to the DB. The caller decides
@@ -23,16 +25,26 @@ export async function POST(req: Request) {
     const filters = [eq(collection.userId, userId)];
     if (body.collectionId) filters.push(eq(script.collectionId, body.collectionId));
 
-    const samples = await db
-      .select({
-        title: script.title,
-        content: script.content,
-      })
+    // Equivalent of "pick a random offset, take 5 contiguous rows" — avoids
+    // ORDER BY RANDOM()'s full-table sort. id is a UUID so we can't do
+    // `WHERE id >= random_max_id`; OFFSET works for any id type.
+    const [{ n }] = await db
+      .select({ n: sql<number>`COUNT(*)`.as("n") })
       .from(script)
       .innerJoin(collection, eq(collection.id, script.collectionId))
-      .where(and(...filters))
-      .orderBy(sql`RANDOM()`)
-      .limit(5);
+      .where(and(...filters));
+
+    let samples: { title: string | null; content: string }[] = [];
+    if (n > 0) {
+      const offset = n > SAMPLE_SIZE ? Math.floor(Math.random() * (n - SAMPLE_SIZE + 1)) : 0;
+      samples = await db
+        .select({ title: script.title, content: script.content })
+        .from(script)
+        .innerJoin(collection, eq(collection.id, script.collectionId))
+        .where(and(...filters))
+        .limit(SAMPLE_SIZE)
+        .offset(offset);
+    }
 
     let collectionName: string | null = null;
     if (body.collectionId) {
@@ -54,3 +66,4 @@ export async function POST(req: Request) {
     return jsonError(err);
   }
 }
+

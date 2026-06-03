@@ -21,7 +21,7 @@ const STATUS_TONE: Record<ScriptStatus, string> = {
 };
 
 type Props = {
-  id: string;
+  id: number;
   title: string;
   preview: string;
   collectionName: string;

@@ -59,7 +59,6 @@ export function InspirePage() {
     setDraft(null);
     setToast("已采纳，新增一条稿件");
     setTimeout(() => setToast(null), 2000);
-    inspire();
   }
 
   return (

@@ -13,7 +13,7 @@ import {
   type ScriptStatus,
 } from "@/lib/script-status";
 
-type Collection = { id: string; name: string };
+type Collection = { id: number; name: string };
 export type SortKey = "updated" | "created";
 
 const SORT_LABEL: Record<SortKey, string> = {
@@ -28,7 +28,7 @@ export function ScriptsFilters({
   sort,
 }: {
   collections: Collection[];
-  collectionId: string | null;
+  collectionId: number | null;
   statuses: ScriptStatus[];
   sort: SortKey;
 }) {

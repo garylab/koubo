@@ -75,8 +75,9 @@ export async function inspireScript(opts: {
 任务：
 - 选题在用户已有的话题领域内，但是一个**新角度、新切入点**，不要重复或改写样本里的任何一篇。
 - 标题最多 10 个中文字，不要标点、不要书名号、引号、emoji。
-- 内容是这条创意的一句话核心点子（**严格不超过 40 个中文字**），只是给作者一个起头/钩子，不是完整稿件。
+- 内容是这条创意的起手钩子：**总长度必须在 30 到 70 个中文字之间**，且必须用完整的句子结尾（以"。""！""？"收尾，不能戛然而止）。如果你写到第 65 个字还没收尾，就直接用 "。" 收住。少于 30 字、超过 70 字、没有完整句号收尾，都算不合格。
 - 内容必须口语，禁止"因此/然而/通过/旨在/进行"。
+- 内容不要包含标题本身，不要列点。
 
 输出格式严格如下（除此之外不输出任何文字、说明、Markdown）：
 TITLE: <标题>
@@ -91,7 +92,8 @@ TITLE: <标题>
       { role: "user", content: user },
     ],
     stream: false,
-    max_tokens: 200,
+    max_tokens: 300,
+    temperature: 0.95,
   })) as { response?: string };
   const raw = (res.response ?? "").trim();
 
@@ -102,9 +104,7 @@ TITLE: <标题>
     title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
     const tchars = Array.from(title);
     if (tchars.length > 10) title = tchars.slice(0, 10).join("");
-    let content = m[2].trim();
-    const cchars = Array.from(content);
-    if (cchars.length > 40) content = cchars.slice(0, 40).join("");
+    const content = m[2].trim();
     return { title, content };
   }
   // Fallback: treat first line as title.
@@ -112,8 +112,7 @@ TITLE: <标题>
   const firstLine = lines[0].replace(/^TITLE:\s*/i, "").trim();
   const rest = lines.slice(1).join("\n").replace(/^---\s*\n?/m, "").trim();
   const ft = Array.from(firstLine).slice(0, 10).join("");
-  const fc = Array.from(rest || raw).slice(0, 40).join("");
-  return { title: ft, content: fc };
+  return { title: ft, content: rest || raw };
 }
 
 export async function generateTitle(content: string): Promise<string> {

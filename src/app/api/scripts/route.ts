@@ -20,7 +20,9 @@ export async function GET(req: Request) {
   try {
     const userId = await requireUserId();
     const url = new URL(req.url);
-    const filterCollection = url.searchParams.get("collectionId");
+    const filterRaw = url.searchParams.get("collectionId");
+    const filterCollection =
+      filterRaw && Number.isInteger(Number(filterRaw)) ? Number(filterRaw) : null;
 
     const db = getDb();
     const where = filterCollection
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
     const userId = await requireUserId();
     const body = (await req.json().catch(() => ({}))) as {
       content?: string;
-      collectionId?: string;
+      collectionId?: number;
       title?: string;
       source?: "user" | "ai";
     };
@@ -59,8 +61,8 @@ export async function POST(req: Request) {
     const source = body.source === "ai" ? "ai" : "user";
     const initialTitle = body.title?.trim() || null;
 
-    let collectionId: string;
-    if (body.collectionId) {
+    let collectionId: number;
+    if (typeof body.collectionId === "number") {
       await requireCollection(body.collectionId, userId);
       collectionId = body.collectionId;
     } else {

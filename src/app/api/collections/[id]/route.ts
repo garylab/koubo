@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection } from "@/lib/db/schema";
-import { requireCollection, requireUserId, jsonError } from "@/lib/api-helpers";
+import { parseId, requireCollection, requireUserId, jsonError } from "@/lib/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const id = parseId((await params).id);
     const userId = await requireUserId();
     await requireCollection(id, userId);
     const body = (await req.json()) as { name?: string };
@@ -37,7 +37,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const id = parseId((await params).id);
     const userId = await requireUserId();
     const existing = await requireCollection(id, userId);
     if (existing.isDefault) {

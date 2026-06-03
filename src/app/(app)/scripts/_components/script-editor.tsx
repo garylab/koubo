@@ -13,12 +13,12 @@ import { markScriptsDirty } from "@/lib/list-refresh";
 const AUTOSAVE_DELAY = 1500;
 
 type Props = {
-  scriptId: string | null; // null = creating
-  initialCollectionId: string;
+  scriptId: number | null; // null = creating
+  initialCollectionId: number;
   initialTitle: string;
   initialContent: string;
   embeddingUpdatedAt: string | null;
-  collections: { id: string; name: string }[];
+  collections: { id: number; name: string }[];
 };
 
 export function ScriptEditor({
@@ -190,7 +190,7 @@ export function ScriptEditor({
       });
       setBusy(null);
       if (!res.ok) return;
-      const data = (await res.json()) as { id: string };
+      const data = (await res.json()) as { id: number };
       window.localStorage.removeItem(storageKey);
       markScriptsDirty();
       router.replace(`/scripts/${data.id}`);

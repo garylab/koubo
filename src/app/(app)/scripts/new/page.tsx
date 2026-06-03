@@ -15,18 +15,22 @@ export default async function NewScriptPage({
 }) {
   const session = await getServerSession();
   if (!session) redirect("/login");
+  const userId = Number(session.user.id);
   const { c: explicit } = await searchParams;
+  const explicitId =
+    explicit && Number.isInteger(Number(explicit)) ? Number(explicit) : null;
 
   const db = getDb();
   const collections = await db
     .select({ id: collection.id, name: collection.name, isDefault: collection.isDefault })
     .from(collection)
-    .where(eq(collection.userId, session.user.id))
+    .where(eq(collection.userId, userId))
     .orderBy(desc(collection.isDefault), desc(collection.updatedAt));
 
-  let initialCollectionId = collections.find((c) => c.id === explicit)?.id;
-  if (!initialCollectionId) {
-    const def = await getOrCreateDefaultCollection(session.user.id);
+  let initialCollectionId =
+    explicitId != null ? collections.find((c) => c.id === explicitId)?.id : undefined;
+  if (initialCollectionId == null) {
+    const def = await getOrCreateDefaultCollection(userId);
     initialCollectionId = def.id;
   }
 

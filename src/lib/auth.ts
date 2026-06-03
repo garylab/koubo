@@ -28,6 +28,13 @@ export const getAuth = cache(() => {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
     },
+    advanced: {
+      database: {
+        // Let SQLite assign integer ids via AUTOINCREMENT instead of having
+        // better-auth generate random 32-char strings.
+        generateId: false,
+      },
+    },
   };
   return betterAuth(options);
 });

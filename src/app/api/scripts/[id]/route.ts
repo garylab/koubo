@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db/client";
 import { script } from "@/lib/db/schema";
 import {
   jsonError,
+  parseId,
   requireCollection,
   requireScript,
   requireUserId,
@@ -24,7 +25,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const id = parseId((await params).id);
     const userId = await requireUserId();
     const { script: s } = await requireScript(id, userId);
     return Response.json(s);
@@ -38,12 +39,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const id = parseId((await params).id);
     const userId = await requireUserId();
     const { script: existing } = await requireScript(id, userId);
     const body = (await req.json()) as {
       content?: string;
-      collectionId?: string;
+      collectionId?: number;
       status?: string;
       title?: string;
     };
@@ -63,7 +64,7 @@ export async function PATCH(
     }
 
     if (
-      typeof body.collectionId === "string" &&
+      typeof body.collectionId === "number" &&
       body.collectionId !== existing.collectionId
     ) {
       await requireCollection(body.collectionId, userId);
@@ -132,7 +133,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const id = parseId((await params).id);
     const userId = await requireUserId();
     await requireScript(id, userId);
     const db = getDb();

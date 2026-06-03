@@ -11,7 +11,7 @@ export default async function AppLayout({
 }) {
   const session = await getServerSession();
   if (!session) redirect("/login");
-  await getOrCreateDefaultCollection(session.user.id);
+  await getOrCreateDefaultCollection(Number(session.user.id));
 
   return (
     <div className="min-h-dvh flex flex-col">

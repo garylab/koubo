@@ -13,13 +13,27 @@ export class HttpError extends Error {
   }
 }
 
-export async function requireUserId(): Promise<string> {
+export async function requireUserId(): Promise<number> {
   const session = await getServerSession();
   if (!session) throw new HttpError(401, "Unauthorized");
-  return session.user.id;
+  // Better-Auth (with useNumberId) stores user.id as a number in the DB but
+  // exposes it as a string on the session object. Coerce here so callers
+  // always work with numbers.
+  const id = Number(session.user.id);
+  if (!Number.isFinite(id)) throw new HttpError(401, "Invalid session");
+  return id;
 }
 
-export async function requireCollection(collectionId: string, userId: string) {
+/**
+ * Parse a route param (URL string) as a positive integer id; throw 404 on bad input.
+ */
+export function parseId(value: string | undefined): number {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) throw new HttpError(404, "Not found");
+  return n;
+}
+
+export async function requireCollection(collectionId: number, userId: number) {
   const db = getDb();
   const [row] = await db
     .select()
@@ -29,7 +43,7 @@ export async function requireCollection(collectionId: string, userId: string) {
   return row;
 }
 
-export async function requireScript(scriptId: string, userId: string) {
+export async function requireScript(scriptId: number, userId: number) {
   const db = getDb();
   const [row] = await db
     .select({ script, collection })
@@ -46,7 +60,7 @@ const DEFAULT_NAME = "默认";
  * Returns the user's default collection, creating it if missing.
  * Used as the fallback target for scripts created without an explicit collection.
  */
-export async function getOrCreateDefaultCollection(userId: string) {
+export async function getOrCreateDefaultCollection(userId: number) {
   const db = getDb();
   const [existing] = await db
     .select()

@@ -15,9 +15,13 @@ export default async function ScriptPage({
 }: {
   params: Promise<{ scriptId: string }>;
 }) {
-  const { scriptId } = await params;
+  const { scriptId: scriptIdRaw } = await params;
+  const scriptId = Number(scriptIdRaw);
+  if (!Number.isInteger(scriptId) || scriptId <= 0) notFound();
+
   const session = await getServerSession();
   if (!session) return null;
+  const userId = Number(session.user.id);
 
   const db = getDb();
   const [[row], similar, collections] = await Promise.all([
@@ -32,14 +36,12 @@ export default async function ScriptPage({
       })
       .from(script)
       .innerJoin(collection, eq(collection.id, script.collectionId))
-      .where(
-        and(eq(script.id, scriptId), eq(collection.userId, session.user.id)),
-      ),
-    listSimilarScripts(scriptId, session.user.id),
+      .where(and(eq(script.id, scriptId), eq(collection.userId, userId))),
+    listSimilarScripts(scriptId, userId),
     db
       .select({ id: collection.id, name: collection.name })
       .from(collection)
-      .where(eq(collection.userId, session.user.id))
+      .where(eq(collection.userId, userId))
       .orderBy(desc(collection.isDefault), desc(collection.updatedAt)),
   ]);
   if (!row) notFound();

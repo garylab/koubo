@@ -19,9 +19,11 @@ export default async function ScriptsPage({
 }) {
   const session = await getServerSession();
   if (!session) return null;
+  const userId = Number(session.user.id);
   const sp = await searchParams;
 
-  const activeCollectionId = sp.c || null;
+  const activeCollectionId =
+    sp.c && Number.isInteger(Number(sp.c)) ? Number(sp.c) : null;
 
   const statuses: ScriptStatus[] = sp.s
     ? sp.s.split(",").filter(isScriptStatus)
@@ -31,7 +33,7 @@ export default async function ScriptsPage({
   const orderCol = sort === "updated" ? script.updatedAt : script.createdAt;
 
   const db = getDb();
-  const filters = [eq(collection.userId, session.user.id)];
+  const filters = [eq(collection.userId, userId)];
   if (activeCollectionId) filters.push(eq(script.collectionId, activeCollectionId));
   if (statuses.length > 0) filters.push(inArray(script.status, statuses));
 
@@ -39,7 +41,7 @@ export default async function ScriptsPage({
     db
       .select({ id: collection.id, name: collection.name })
       .from(collection)
-      .where(eq(collection.userId, session.user.id))
+      .where(eq(collection.userId, userId))
       .orderBy(desc(collection.isDefault), desc(collection.updatedAt)),
     statuses.length === 0
       ? Promise.resolve([])

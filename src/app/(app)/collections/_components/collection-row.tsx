@@ -9,7 +9,7 @@ const REVEAL = 88;
 type Axis = null | "h" | "v";
 
 type Props = {
-  id: string;
+  id: number;
   name: string;
   isDefault: boolean;
 };

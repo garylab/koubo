@@ -12,7 +12,7 @@ const SIM_LIMIT = 20;
  * Upsert the script's embedding into Vectorize. Stores collectionId in metadata
  * so we can filter similarity lookups to the same collection.
  */
-export async function recomputeScriptEmbedding(scriptId: string) {
+export async function recomputeScriptEmbedding(scriptId: number) {
   const db = getDb();
   const [s] = await db.select().from(script).where(eq(script.id, scriptId));
   if (!s) return;
@@ -22,7 +22,7 @@ export async function recomputeScriptEmbedding(scriptId: string) {
   const { env } = getCloudflareContext();
   await env.VECTORIZE.upsert([
     {
-      id: scriptId,
+      id: String(scriptId),
       values: vector,
       metadata: { collectionId: s.collectionId },
     },
@@ -39,11 +39,12 @@ export async function recomputeScriptEmbedding(scriptId: string) {
  * Two-hop: fetch this script's vector from Vectorize, then query Vectorize
  * for nearest neighbours filtered by collection, then hydrate from D1.
  */
-export async function listSimilarScripts(scriptId: string, userId: string) {
+export async function listSimilarScripts(scriptId: number, userId: number) {
   const { env } = getCloudflareContext();
+  const myKey = String(scriptId);
 
   // Fetch this script's vector so we can search for neighbours.
-  const own = await env.VECTORIZE.getByIds([scriptId]);
+  const own = await env.VECTORIZE.getByIds([myKey]);
   const myVector = own[0]?.values;
   if (!myVector) return [];
 
@@ -63,12 +64,12 @@ export async function listSimilarScripts(scriptId: string, userId: string) {
   });
 
   const candidates = result.matches
-    .filter((m) => m.id !== scriptId && m.score >= SIM_THRESHOLD)
+    .filter((m) => m.id !== myKey && m.score >= SIM_THRESHOLD)
     .slice(0, SIM_LIMIT);
   if (candidates.length === 0) return [];
 
-  const scoreById = new Map(candidates.map((m) => [m.id, m.score]));
-  const ids = candidates.map((m) => m.id);
+  const scoreById = new Map(candidates.map((m) => [Number(m.id), m.score]));
+  const ids = Array.from(scoreById.keys());
 
   const rows = await getDb()
     .select({
@@ -88,7 +89,7 @@ export async function listSimilarScripts(scriptId: string, userId: string) {
 /**
  * Delete a script's vector from Vectorize (called from DELETE /api/scripts/[id]).
  */
-export async function deleteScriptEmbedding(scriptId: string) {
+export async function deleteScriptEmbedding(scriptId: number) {
   const { env } = getCloudflareContext();
-  await env.VECTORIZE.deleteByIds([scriptId]);
+  await env.VECTORIZE.deleteByIds([String(scriptId)]);
 }
