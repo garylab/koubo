@@ -14,6 +14,7 @@ import {
   recomputeScriptEmbedding,
 } from "@/lib/similarity";
 import { isScriptStatus } from "@/lib/script-status";
+import { generateTitle } from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,6 +93,30 @@ export async function PATCH(
       (patch.content ?? existing.content).trim().length > 0
     ) {
       defer(recomputeScriptEmbedding(id));
+    }
+
+    // If the title is still empty after this PATCH and we have content,
+    // generate one in the background. The user can always override it later.
+    const effectiveTitle =
+      patch.title !== undefined ? patch.title : existing.title;
+    const effectiveContent = patch.content ?? existing.content;
+    if (
+      (effectiveTitle == null || effectiveTitle.trim() === "") &&
+      effectiveContent.trim().length > 0
+    ) {
+      defer(
+        (async () => {
+          const title = await generateTitle(effectiveContent);
+          if (!title) return;
+          const db2 = getDb();
+          await db2
+            .update(script)
+            .set({ title, updatedAt: new Date() })
+            .where(eq(script.id, id));
+          revalidatePath("/scripts");
+          revalidatePath(`/scripts/${id}`);
+        })(),
+      );
     }
 
     revalidatePath("/scripts");
