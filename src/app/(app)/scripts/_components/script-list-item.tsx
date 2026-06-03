@@ -255,7 +255,7 @@ export function ScriptListItem({ id, title, preview, collectionName, time, statu
                 }
                 setMenuOpen((v) => !v);
               }}
-              className={`shrink-0 px-2 py-0.5 rounded ${STATUS_TONE[currentStatus]}`}
+              className={`shrink-0 inline-flex items-center h-7 px-2 rounded text-xs ${STATUS_TONE[currentStatus]}`}
             >
               {SCRIPT_STATUS_LABEL[currentStatus]}
             </button>
