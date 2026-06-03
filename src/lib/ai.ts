@@ -70,26 +70,18 @@ export async function inspireScript(opts: {
     ? `当前稿件集名："${opts.collectionName}"。`
     : "";
 
-  const system = `你是口播视频稿创意助手。根据用户已有的稿件，推断他的话题领域和语调，然后生成一篇**全新**的稿件创意。
-
-中文口播稿写作准则（必须严格遵守）：
-- 像对镜头说话，不是写文章。每句念出来要顺、要短，单句尽量不超过 25 个字。
-- 用口语，不用书面语。禁止"因此/然而/通过/旨在/进行/不仅…而且"，改用"所以/但是/你看/做/让"。
-- 不要写成有 1/2/3 编号的清单。
-- 不要"接下来我要讲""下面我们来看"这种纸面口吻。
-- 不要"大家好我是XX""今天我们来聊聊""喜欢的话点个赞"这种万能套话。
-- 不要凭空加事实、数据、人名。
-- 不堆形容词、不喊口号、不抒情。
+  const system = `你是口播视频稿创意助手。根据用户已有的稿件，推断他的话题领域和语调，然后给一条**全新**的创意种子。
 
 任务：
-- 选题要在用户已有的话题领域内，但**完全是一个新角度、新切入点**，不要重复或改写样本里的任何一篇。
-- 标题最多 10 个中文字，不要标点。
-- 正文是一份能直接录制的完整口播稿，2-4 段。
+- 选题在用户已有的话题领域内，但是一个**新角度、新切入点**，不要重复或改写样本里的任何一篇。
+- 标题最多 10 个中文字，不要标点、不要书名号、引号、emoji。
+- 内容是这条创意的一句话核心点子（**严格不超过 30 个中文字**），只是给作者一个起头/钩子，不是完整稿件。
+- 内容必须口语，禁止"因此/然而/通过/旨在/进行"。
 
 输出格式严格如下（除此之外不输出任何文字、说明、Markdown）：
 TITLE: <标题>
 ---
-<正文>`;
+<内容>`;
 
   const user = `${ctx}已有稿件样本如下，请据此生成一篇全新的稿件创意：\n\n${sampleBlock}`;
 
@@ -99,7 +91,7 @@ TITLE: <标题>
       { role: "user", content: user },
     ],
     stream: false,
-    max_tokens: 1200,
+    max_tokens: 200,
   })) as { response?: string };
   const raw = (res.response ?? "").trim();
 
@@ -108,15 +100,20 @@ TITLE: <标题>
   if (m) {
     let title = m[1].trim();
     title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
-    const chars = Array.from(title);
-    if (chars.length > 10) title = chars.slice(0, 10).join("");
-    return { title, content: m[2].trim() };
+    const tchars = Array.from(title);
+    if (tchars.length > 10) title = tchars.slice(0, 10).join("");
+    let content = m[2].trim();
+    const cchars = Array.from(content);
+    if (cchars.length > 30) content = cchars.slice(0, 30).join("");
+    return { title, content };
   }
   // Fallback: treat first line as title.
   const lines = raw.split("\n");
   const firstLine = lines[0].replace(/^TITLE:\s*/i, "").trim();
   const rest = lines.slice(1).join("\n").replace(/^---\s*\n?/m, "").trim();
-  return { title: firstLine.slice(0, 10), content: rest || raw };
+  const ft = Array.from(firstLine).slice(0, 10).join("");
+  const fc = Array.from(rest || raw).slice(0, 30).join("");
+  return { title: ft, content: fc };
 }
 
 export async function generateTitle(content: string): Promise<string> {

@@ -1,0 +1,1 @@
+ALTER TABLE `script` ADD `source` text DEFAULT 'user' NOT NULL;

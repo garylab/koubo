@@ -122,6 +122,9 @@ export const script = sqliteTable(
     })
       .notNull()
       .default("unrecorded"),
+    source: text("source", { enum: ["user", "ai"] })
+      .notNull()
+      .default("user"),
     embeddingUpdatedAt: integer("embedding_updated_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()

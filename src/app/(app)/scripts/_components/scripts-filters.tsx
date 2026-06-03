@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SCRIPTS_DIRTY_KEY } from "@/lib/list-refresh";
-import { InspireButton } from "./inspire-button";
 
 const STORAGE_KEY = "koubo:scripts-filters";
 
@@ -107,8 +106,7 @@ export function ScriptsFilters({
       />
 
       <div className="ml-auto flex items-center gap-1">
-        <InspireButton />
-        <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">排序</span>
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">排序</span>
         <select
           value={sort}
           onChange={(e) => update({ sort: e.target.value === "created" ? null : e.target.value })}

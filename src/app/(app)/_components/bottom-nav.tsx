@@ -14,10 +14,11 @@ const SCRIPTS: NavItem = {
   href: "/scripts",
   label: "稿件",
   matches: (p) =>
-    p === "/scripts" ||
-    p.startsWith("/scripts") ||
-    p === "/collections" ||
-    p.startsWith("/collections/"),
+    !p.startsWith("/scripts/inspire") &&
+    (p === "/scripts" ||
+      p.startsWith("/scripts") ||
+      p === "/collections" ||
+      p.startsWith("/collections/")),
   icon: (
     <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
       <path
@@ -29,6 +30,23 @@ const SCRIPTS: NavItem = {
       />
       <path
         d="M5 10.5V20a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+};
+
+const INSPIRE: NavItem = {
+  href: "/scripts/inspire",
+  label: "启发",
+  matches: (p) => p.startsWith("/scripts/inspire"),
+  icon: (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6" aria-hidden>
+      <path
+        d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .9 1.6h5.2c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
@@ -68,9 +86,10 @@ export function BottomNav() {
       className="fixed bottom-0 inset-x-0 z-40 border-t border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
     >
-      <div className="mx-auto max-w-3xl grid grid-cols-3">
+      <div className="mx-auto max-w-3xl grid grid-cols-4">
         <NavTab item={SCRIPTS} active={SCRIPTS.matches(pathname)} />
         <CreateButton href={createHref} />
+        <NavTab item={INSPIRE} active={INSPIRE.matches(pathname)} />
         <NavTab item={ME} active={ME.matches(pathname)} />
       </div>
     </nav>

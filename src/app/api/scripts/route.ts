@@ -52,8 +52,12 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => ({}))) as {
       content?: string;
       collectionId?: string;
+      title?: string;
+      source?: "user" | "ai";
     };
     const content = body.content ?? "";
+    const source = body.source === "ai" ? "ai" : "user";
+    const initialTitle = body.title?.trim() || null;
 
     let collectionId: string;
     if (body.collectionId) {
@@ -67,24 +71,27 @@ export async function POST(req: Request) {
     const db = getDb();
     const [row] = await db
       .insert(script)
-      .values({ collectionId, content })
+      .values({ collectionId, content, source, title: initialTitle })
       .returning();
 
     if (content.trim()) {
       defer(recomputeScriptEmbedding(row.id));
-      defer(
-        (async () => {
-          const title = await generateTitle(content);
-          if (!title) return;
-          const db2 = getDb();
-          await db2
-            .update(script)
-            .set({ title, updatedAt: new Date() })
-            .where(eq(script.id, row.id));
-          revalidatePath("/scripts");
-          revalidatePath(`/scripts/${row.id}`);
-        })(),
-      );
+      // Only auto-generate title when caller didn't provide one.
+      if (!initialTitle) {
+        defer(
+          (async () => {
+            const title = await generateTitle(content);
+            if (!title) return;
+            const db2 = getDb();
+            await db2
+              .update(script)
+              .set({ title, updatedAt: new Date() })
+              .where(eq(script.id, row.id));
+            revalidatePath("/scripts");
+            revalidatePath(`/scripts/${row.id}`);
+          })(),
+        );
+      }
     }
     revalidatePath("/scripts");
     return Response.json(row, { status: 201 });
