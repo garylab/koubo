@@ -241,7 +241,7 @@ export function ScriptListItem({ id, title, preview, collectionName, time, statu
           onClick={onLinkClick}
           className="block px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-900"
         >
-          <div className="font-medium flex items-center gap-2 min-w-0">
+          <div className="text-lg font-medium flex items-center gap-2 min-w-0">
             <button
               ref={badgeRef}
               type="button"
