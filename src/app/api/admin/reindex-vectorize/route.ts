@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { script } from "@/lib/db/schema";
-import { requireUserId, jsonError } from "@/lib/api-helpers";
+import { jsonError } from "@/lib/api-helpers";
 import { recomputeScriptEmbedding } from "@/lib/similarity";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
@@ -16,9 +16,9 @@ export const dynamic = "force-dynamic";
 //  4) drops _script_map
 //
 // Idempotent: re-running after the map is gone is a no-op.
+// TEMP: auth removed for one-shot ops; this whole file is deleted after use.
 export async function POST() {
   try {
-    await requireUserId(); // any logged-in user can run this
     const db = getDb();
 
     const hasMap = await db
