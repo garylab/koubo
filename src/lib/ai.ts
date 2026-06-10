@@ -38,7 +38,7 @@ async function openaiChat(opts: {
   temperature?: number;
   max_tokens?: number;
 }): Promise<string> {
-  const { max_tokens, ...rest } = opts;
+  const { max_tokens, temperature: _temperature, ...rest } = opts;
   const res = await fetch(OPENAI_CHAT_URL, {
     method: "POST",
     headers: {
@@ -148,7 +148,6 @@ TITLE: <标题>
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      temperature: 0.95,
       max_tokens: 800,
     })
   ).trim();
