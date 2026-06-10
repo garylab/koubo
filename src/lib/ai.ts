@@ -2,11 +2,59 @@ import "server-only";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 // === Embeddings: bge-m3 (multilingual, strong Chinese), 1024-dim ===
+// Embeddings keep running on Workers AI — only chat moved to OpenAI.
 export const EMBED_DIM = 1024;
 export const EMBED_MODEL = "@cf/baai/bge-m3" as const;
 
-// === Chat: Llama 3.3 70B Instruct (FP8, fast) ===
-export const CHAT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast" as const;
+// === Chat: OpenAI ===
+// Override via OPENAI_CHAT_MODEL / OPENAI_TITLE_MODEL secrets without redeploy.
+const DEFAULT_CHAT_MODEL = "gpt-5.5";
+const DEFAULT_TITLE_MODEL = "gpt-5.5";
+
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
+
+type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+
+function openaiKey(): string {
+  const { env } = getCloudflareContext();
+  const key = env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY not configured");
+  return key;
+}
+
+function chatModel(): string {
+  const { env } = getCloudflareContext();
+  return (env as unknown as { OPENAI_CHAT_MODEL?: string }).OPENAI_CHAT_MODEL || DEFAULT_CHAT_MODEL;
+}
+
+function titleModel(): string {
+  const { env } = getCloudflareContext();
+  return (env as unknown as { OPENAI_TITLE_MODEL?: string }).OPENAI_TITLE_MODEL || DEFAULT_TITLE_MODEL;
+}
+
+async function openaiChat(opts: {
+  model: string;
+  messages: ChatMessage[];
+  temperature?: number;
+  max_tokens?: number;
+}): Promise<string> {
+  const res = await fetch(OPENAI_CHAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openaiKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ...opts, stream: false }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`OpenAI ${res.status}: ${body.slice(0, 500)}`);
+  }
+  const json = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return json.choices?.[0]?.message?.content ?? "";
+}
 
 export async function embedText(text: string): Promise<number[]> {
   const { env } = getCloudflareContext();
@@ -19,24 +67,20 @@ export async function embedText(text: string): Promise<number[]> {
 }
 
 /**
- * Streams chat completion via Workers AI. Returns the raw SSE
- * ReadableStream that the route handler will transform into a plain
- * text stream for the browser.
+ * One-shot chat completion via OpenAI. Returns the full assistant message.
  */
-export async function streamChatCompletion(opts: {
+export async function chatCompletion(opts: {
   system: string;
   user: string;
-}): Promise<ReadableStream<Uint8Array>> {
-  const { env } = getCloudflareContext();
-  const stream = (await env.AI.run(CHAT_MODEL, {
+}): Promise<string> {
+  return openaiChat({
+    model: chatModel(),
     messages: [
       { role: "system", content: opts.system },
       { role: "user", content: opts.user },
     ],
-    stream: true,
     max_tokens: 2048,
-  })) as ReadableStream<Uint8Array>;
-  return stream;
+  });
 }
 
 const TITLE_PROMPT = `你是给视频稿件起标题的助手。读完用户给的稿件内容，给一个最多 10 个中文字的标题，要求：
@@ -46,11 +90,6 @@ const TITLE_PROMPT = `你是给视频稿件起标题的助手。读完用户给�
 - 只返回标题本身，不要任何其他文字、说明、Markdown`;
 
 /**
- * Generate a short Chinese title (≤ 10 chars) from script content.
- * Strips quotes/punctuation/whitespace and truncates to 10 chars as a safety
- * net in case the model ignores the constraint.
- */
-/**
  * Given samples from the user's existing scripts, ask the model to infer
  * topic + style and propose a fresh one. Returns { title, content }.
  */
@@ -58,7 +97,6 @@ export async function inspireScript(opts: {
   samples: { title: string; content: string }[];
   collectionName?: string | null;
 }): Promise<{ title: string; content: string }> {
-  const { env } = getCloudflareContext();
   const sampleBlock = opts.samples
     .map((s, i) => {
       const t = s.title.trim() || "(无标题)";
@@ -86,16 +124,17 @@ TITLE: <标题>
 
   const user = `${ctx}已有稿件样本如下，请据此生成一篇全新的稿件创意：\n\n${sampleBlock}`;
 
-  const res = (await env.AI.run(CHAT_MODEL, {
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-    stream: false,
-    max_tokens: 300,
-    temperature: 0.95,
-  })) as { response?: string };
-  const raw = (res.response ?? "").trim();
+  const raw = (
+    await openaiChat({
+      model: chatModel(),
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.95,
+      max_tokens: 400,
+    })
+  ).trim();
 
   // Parse "TITLE: ...\n---\n<body>"
   const m = raw.match(/^TITLE:\s*(.+?)\s*\n---\s*\n([\s\S]+)$/);
@@ -116,18 +155,18 @@ TITLE: <标题>
 }
 
 export async function generateTitle(content: string): Promise<string> {
-  const { env } = getCloudflareContext();
   const trimmed = content.trim().slice(0, 2000);
   if (!trimmed) return "";
-  const res = (await env.AI.run(CHAT_MODEL, {
-    messages: [
-      { role: "system", content: TITLE_PROMPT },
-      { role: "user", content: trimmed },
-    ],
-    stream: false,
-    max_tokens: 40,
-  })) as { response?: string };
-  let title = (res.response ?? "").trim();
+  let title = (
+    await openaiChat({
+      model: titleModel(),
+      messages: [
+        { role: "system", content: TITLE_PROMPT },
+        { role: "user", content: trimmed },
+      ],
+      max_tokens: 40,
+    })
+  ).trim();
   // Strip surrounding quotes/brackets/punctuation the model might add.
   title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
   // Cap length conservatively (10 chars, counting any unicode codepoint).

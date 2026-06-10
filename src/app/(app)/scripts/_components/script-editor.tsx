@@ -240,20 +240,14 @@ export function ScriptEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, mode }),
       });
-      if (!res.ok || !res.body) {
-        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+      const j = (await res.json().catch(() => null)) as
+        | { content?: string; error?: string }
+        | null;
+      if (!res.ok || !j?.content) {
         setAiError(j?.error ?? `请求失败 (${res.status})`);
         return;
       }
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let acc = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        acc += decoder.decode(value, { stream: true });
-        setAiSuggestion(acc);
-      }
+      setAiSuggestion(j.content);
     } catch (err) {
       setAiError(err instanceof Error ? err.message : "请求失败");
     } finally {
