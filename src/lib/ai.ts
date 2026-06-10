@@ -38,13 +38,18 @@ async function openaiChat(opts: {
   temperature?: number;
   max_tokens?: number;
 }): Promise<string> {
+  const { max_tokens, ...rest } = opts;
   const res = await fetch(OPENAI_CHAT_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${openaiKey()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ ...opts, stream: false }),
+    body: JSON.stringify({
+      ...rest,
+      stream: false,
+      ...(max_tokens != null ? { max_completion_tokens: max_tokens } : {}),
+    }),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
