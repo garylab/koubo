@@ -17,7 +17,7 @@ type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
 function openaiKey(): string {
   const { env } = getCloudflareContext();
-  const key = env.OPENAI_API_KEY;
+  const key = (env as unknown as { OPENAI_API_KEY?: string }).OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY not configured");
   return key;
 }
