@@ -72,13 +72,23 @@ export async function embedText(text: string): Promise<number[]> {
 }
 
 /**
- * One-shot chat completion via OpenAI. Returns the full assistant message.
+ * Collapse any run of 2+ newlines into a single newline and trim ends.
+ * Talking-head scripts read as one tight block — blank lines between
+ * paragraphs are visual noise the user doesn't want.
+ */
+function tightenWhitespace(s: string): string {
+  return s.replace(/\n[ \t]*\n+/g, "\n").trim();
+}
+
+/**
+ * One-shot chat completion via OpenAI. Returns the full assistant message,
+ * with blank lines between paragraphs collapsed.
  */
 export async function chatCompletion(opts: {
   system: string;
   user: string;
 }): Promise<string> {
-  return openaiChat({
+  const raw = await openaiChat({
     model: chatModel(),
     messages: [
       { role: "system", content: opts.system },
@@ -86,6 +96,7 @@ export async function chatCompletion(opts: {
     ],
     max_tokens: 2048,
   });
+  return tightenWhitespace(raw);
 }
 
 const TITLE_PROMPT = `你是给视频稿件起标题的助手。读完用户给的稿件内容，给一个最多 10 个中文字的标题，要求：
@@ -159,15 +170,17 @@ TITLE: <标题>
     title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
     const tchars = Array.from(title);
     if (tchars.length > 10) title = tchars.slice(0, 10).join("");
-    const content = m[2].trim();
+    const content = tightenWhitespace(m[2]);
     return { title, content };
   }
   // Fallback: treat first line as title.
   const lines = raw.split("\n");
   const firstLine = lines[0].replace(/^TITLE:\s*/i, "").trim();
-  const rest = lines.slice(1).join("\n").replace(/^---\s*\n?/m, "").trim();
+  const rest = tightenWhitespace(
+    lines.slice(1).join("\n").replace(/^---\s*\n?/m, ""),
+  );
   const ft = Array.from(firstLine).slice(0, 10).join("");
-  return { title: ft, content: rest || raw };
+  return { title: ft, content: rest || tightenWhitespace(raw) };
 }
 
 export async function generateTitle(content: string): Promise<string> {

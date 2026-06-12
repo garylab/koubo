@@ -166,18 +166,21 @@ export function ScriptEditor({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiMode, setAiMode] = useState<AiMode>("optimize");
+  const [aiMode, setAiMode] = useState<AiMode | "custom">("optimize");
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
   const aiMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!aiMenuRef.current || aiMenuRef.current.contains(e.target as Node)) return;
       setAiMenuOpen(false);
+      setCustomOpen(false);
     }
-    if (aiMenuOpen) document.addEventListener("mousedown", onDoc);
+    if (aiMenuOpen || customOpen) document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-  }, [aiMenuOpen]);
+  }, [aiMenuOpen, customOpen]);
 
   async function save() {
     if (!canSave) return;
@@ -226,10 +229,12 @@ export function ScriptEditor({
     }
   }
 
-  async function runAi(mode: AiMode = aiMode) {
+  async function runAi(mode: AiMode | "custom" = aiMode) {
     if (!content.trim()) return;
+    if (mode === "custom" && !customPrompt.trim()) return;
     setAiMode(mode);
     setAiMenuOpen(false);
+    setCustomOpen(false);
     setAiOpen(true);
     setAiSuggestion("");
     setAiError(null);
@@ -238,7 +243,11 @@ export function ScriptEditor({
       const res = await fetch("/api/ai/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, mode }),
+        body: JSON.stringify(
+          mode === "custom"
+            ? { content, mode, customPrompt: customPrompt.trim() }
+            : { content, mode },
+        ),
       });
       const j = (await res.json().catch(() => null)) as
         | { content?: string; error?: string }
@@ -433,7 +442,7 @@ export function ScriptEditor({
               </svg>
               AI
             </button>
-            {aiMenuOpen && (
+            {aiMenuOpen && !customOpen && (
               <div className="absolute right-0 bottom-full mb-2 w-max rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
                 {AI_MODES.map((m) => (
                   <button
@@ -450,6 +459,52 @@ export function ScriptEditor({
                     </span>
                   </button>
                 ))}
+                <div className="my-1 border-t border-neutral-200 dark:border-neutral-800" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiMenuOpen(false);
+                    setCustomOpen(true);
+                  }}
+                  className="block w-full text-left whitespace-nowrap px-4 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                >
+                  <span className="text-neutral-900 dark:text-neutral-100">自定义…</span>
+                  <span className="text-xs text-neutral-500 ml-1">/ 用自己的指令</span>
+                </button>
+              </div>
+            )}
+            {customOpen && (
+              <div className="absolute right-0 bottom-full mb-2 w-80 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md p-3 space-y-2">
+                <div className="text-xs text-neutral-500">
+                  自定义指令（描述你想让 AI 怎么改）
+                </div>
+                <textarea
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value.slice(0, 500))}
+                  placeholder="例如：把整段改成更年轻、带点自嘲的语气；保留所有数字"
+                  className="w-full h-24 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent p-2 text-sm outline-none resize-none focus:border-violet-500"
+                  autoFocus
+                />
+                <div className="flex items-center justify-between text-xs text-neutral-500">
+                  <span>{customPrompt.length}/500</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCustomOpen(false)}
+                      className="px-2 py-1 text-neutral-500"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runAi("custom")}
+                      disabled={!customPrompt.trim()}
+                      className="rounded bg-violet-600 text-white px-3 py-1 disabled:opacity-40"
+                    >
+                      生成
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -470,7 +525,7 @@ function AICompare({
   onReject,
   onRetry,
 }: {
-  mode: AiMode;
+  mode: AiMode | "custom";
   content: string;
   onChange: (v: string) => void;
   aiSuggestion: string;
@@ -480,6 +535,7 @@ function AICompare({
   onReject: () => void;
   onRetry: () => void;
 }) {
+  const modeLabel = mode === "custom" ? "自定义" : AI_MODE_LABEL[mode];
   return (
     <div className="max-w-3xl mx-auto w-full px-4 py-3 space-y-3">
       <section>
@@ -492,8 +548,8 @@ function AICompare({
       </section>
       <section>
         <div className="text-xs text-neutral-500 mb-1 flex items-center gap-2">
-          AI 建议 · {AI_MODE_LABEL[mode]}
-          {aiBusy && <span className="text-violet-600">流式生成中…</span>}
+          AI 建议 · {modeLabel}
+          {aiBusy && <span className="text-violet-600">生成中…</span>}
         </div>
         <div className="w-full min-h-[30vh] rounded-md border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/30 p-3 text-sm leading-relaxed font-mono overflow-y-auto whitespace-pre-wrap">
           {aiError ? (

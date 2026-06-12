@@ -27,6 +27,7 @@ const SCRIPT_RULES = `
 - 不要写"接下来我要讲""下面我们来看""第一点…"这种纸面提纲口吻。
 - 不堆形容词、不喊口号、不抒情。情绪靠节奏和真话堆出来，不靠"非常 / 极其 / 真的太"。
 - 不要凭空加事实、数据、人名、引用。原稿没有的就别造。
+- **段落之间不要空行**：段与段直接换行就行，**严禁出现连续两个换行（空行）**。整体读起来要紧凑。
 - 直接输出最终稿件本身，不要任何前置说明、标题、Markdown、解释或包裹的引号。
 `.trim();
 
@@ -60,4 +61,16 @@ export const AI_MODE_PROMPT: Record<AiMode, string> = {
 
 export function isAiMode(v: unknown): v is AiMode {
   return typeof v === "string" && (AI_MODES as readonly string[]).includes(v);
+}
+
+// Custom mode: user types their own instruction. We still prepend the
+// shared SCRIPT_RULES so the output stays talking-head-shaped, then drop
+// the user's instruction in as the actual task.
+export function customModePrompt(userInstruction: string): string {
+  return `${SCRIPT_RULES}
+
+任务（来自用户的自定义指令，严格遵守）：
+${userInstruction.trim()}
+
+注意：如果用户的指令与上面的口播稿写作准则冲突，以**用户的指令**为准；但仍然要返回可以直接对镜头念的稿件，不要返回说明、Markdown、前置废话。`;
 }
