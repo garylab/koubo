@@ -14,6 +14,7 @@ import { markScriptsDirty } from "@/lib/list-refresh";
 
 const REVEAL = 88;
 const STATUS_TONE: Record<ScriptStatus, string> = {
+  draft: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
   unrecorded: "bg-neutral-100 text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400",
   recording: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
   recorded: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",

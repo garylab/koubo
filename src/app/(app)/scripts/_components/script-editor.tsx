@@ -482,7 +482,7 @@ export function ScriptEditor({
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value.slice(0, 500))}
                   placeholder="例如：把整段改成更年轻、带点自嘲的语气；保留所有数字"
-                  className="w-full h-24 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent p-2 text-sm outline-none resize-none focus:border-violet-500"
+                  className="w-full h-24 rounded border border-neutral-300 dark:border-neutral-700 bg-transparent p-2 text-base outline-none resize-none focus:border-violet-500"
                   autoFocus
                 />
                 <div className="flex items-center justify-between text-xs text-neutral-500">

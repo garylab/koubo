@@ -79,6 +79,18 @@ export async function PATCH(
       patch.status = body.status;
     }
 
+    // Auto-transition status based on content presence, unless the caller
+    // explicitly set a status in this request.
+    if (patch.status === undefined && contentChanged) {
+      const nextContent = patch.content ?? existing.content;
+      const isEmpty = !nextContent.trim();
+      if (isEmpty) {
+        patch.status = "draft";
+      } else if (existing.status === "draft") {
+        patch.status = "unrecorded";
+      }
+    }
+
     const db = getDb();
     const [row] = await db
       .update(script)

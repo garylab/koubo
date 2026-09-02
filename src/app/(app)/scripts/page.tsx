@@ -27,7 +27,7 @@ export default async function ScriptsPage({
 
   const statuses: ScriptStatus[] = sp.s
     ? sp.s.split(",").filter(isScriptStatus)
-    : (["unrecorded", "recording", "recorded"] as ScriptStatus[]);
+    : (["draft", "unrecorded", "recording", "recorded"] as ScriptStatus[]);
 
   const sort: SortKey = sp.sort === "updated" ? "updated" : "created";
   const orderCol = sort === "updated" ? script.updatedAt : script.createdAt;

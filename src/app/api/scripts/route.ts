@@ -71,9 +71,10 @@ export async function POST(req: Request) {
     }
 
     const db = getDb();
+    const status = content.trim() ? "unrecorded" : "draft";
     const [row] = await db
       .insert(script)
-      .values({ collectionId, content, source, title: initialTitle })
+      .values({ collectionId, content, source, title: initialTitle, status })
       .returning();
 
     if (content.trim()) {

@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
 import { requireUserId, jsonError } from "@/lib/api-helpers";
-import { inspireScript } from "@/lib/ai";
+import { inspireTitles } from "@/lib/ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 const SAMPLE_SIZE = 5;
 
 // POST /api/scripts/inspire
-// Body: { collectionId?: string }
-// Returns { title, content } — does NOT write to the DB. The caller decides
-// whether to accept the suggestion via POST /api/scripts.
+// Body: { collectionId?: number }
+// Returns { titles: string[] } — 7 fresh 口播主题, no content. Does NOT write
+// to the DB. The caller decides which titles to accept via POST /api/scripts.
 export async function POST(req: Request) {
   try {
     const userId = await requireUserId();
@@ -57,12 +57,12 @@ export async function POST(req: Request) {
       collectionName = c?.name ?? null;
     }
 
-    const draft = await inspireScript({
+    const titles = await inspireTitles({
       samples: samples.map((s) => ({ title: s.title ?? "", content: s.content })),
       collectionName,
     });
 
-    return Response.json(draft);
+    return Response.json({ titles });
   } catch (err) {
     return jsonError(err);
   }

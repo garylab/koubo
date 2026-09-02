@@ -117,10 +117,10 @@ export const script = sqliteTable(
     title: text("title"),
     content: text("content").notNull().default(""),
     status: text("status", {
-      enum: ["unrecorded", "recording", "recorded", "published"],
+      enum: ["draft", "unrecorded", "recording", "recorded", "published"],
     })
       .notNull()
-      .default("unrecorded"),
+      .default("draft"),
     source: text("source", { enum: ["user", "ai"] })
       .notNull()
       .default("user"),

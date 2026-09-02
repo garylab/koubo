@@ -107,12 +107,15 @@ const TITLE_PROMPT = `你是给视频稿件起标题的助手。读完用户给�
 
 /**
  * Given samples from the user's existing scripts, ask the model to infer
- * topic + style and propose a fresh one. Returns { title, content }.
+ * topic + style and propose 7 fresh **titles** (口播主题) — no bodies.
+ * The user picks which titles to add to the library and writes content later.
  */
-export async function inspireScript(opts: {
+export async function inspireTitles(opts: {
   samples: { title: string; content: string }[];
   collectionName?: string | null;
-}): Promise<{ title: string; content: string }> {
+  count?: number;
+}): Promise<string[]> {
+  const count = opts.count ?? 7;
   const sampleBlock = opts.samples
     .map((s, i) => {
       const t = s.title.trim() || "(无标题)";
@@ -124,33 +127,26 @@ export async function inspireScript(opts: {
     ? `当前稿件集名："${opts.collectionName}"。`
     : "";
 
-  const system = `你是口播视频稿创意助手。根据用户已有的稿件，推断他的话题领域和语调，然后给一条**全新**的开场口播稿。
+  const system = `你是口播视频稿创意助手。根据用户已有的稿件，推断他的话题领域和语调，然后给出 ${count} 个**全新**的口播主题标题。
 
-写作准则（强制）：
-- 这是要对着镜头讲出来的，不是公众号文章。短句、口语、像在跟人聊天。
-- **必须有具体内容**。开头第一句就要落到一个具体的钩子上，二选一：
-  (a) 一个具体的人/事/场景（"我前两天看到一个外卖小哥…"、"上海有家面馆只开三小时…"）；
-  (b) 一个具体的数字、对比或反常识的事实（"全中国有 1400 万人在做这件事"、"做了 10 年才发现一开始就错了"）。
-  禁止用万能名词开场，比如"今天聊聊…"、"很多人都不知道…"、"在当今社会…"、"我们经常会发现…"。
-- 必须有观点或者悬念推进，不能只是描述。讲完钩子要往前推一句，给一个**结论、矛盾或者反问**，让观众想继续听。
-- **严禁鸡汤抽象词**：心态、格局、底层逻辑、本质、认知、思考、启示、感悟、共鸣、价值、意义、重要性、关键所在、不可或缺、息息相关、提升自我、突破自我、与时俱进、积极向上。出现一个就不合格。
-- **严禁书面连接词**：因此、然而、通过、旨在、进行、综上、不仅…而且、与此同时、在某种程度上。
-- 不要"大家好"、"今天我们来聊聊"、"以上就是"这类套话。
-- 不要列点、不要小标题、不要 Markdown。
-- 标题最多 10 个中文字，不要标点、书名号、引号、emoji；标题要具体，不要"我的思考"、"关于 XX"这种。
-- 内容长度：**120 到 220 个中文字**，必须用完整句子收尾（"。""！""？"）。少于 120 或多于 220 都不合格。
-- 不要直接抄样本里的句子或人物；样本只用来判断话题方向和说话风格。
+标题准则（强制）：
+- 每个标题就是一个具体的口播主题，看到就知道要讲什么。
+- 必须具体、有钩子，二选一：
+  (a) 一个具体的人/事/场景（"外卖小哥的破本子"、"上海只开三小时的面馆"）；
+  (b) 一个具体的数字、对比或反常识的事实（"1400 万人在做这件事"、"做了 10 年才发现的错"）。
+- 每个标题最多 12 个中文字。
+- 禁止使用抽象词：心态、格局、底层逻辑、本质、认知、思考、启示、感悟、价值、意义、重要性、不可或缺、提升自我。
+- 禁止"我的思考"、"关于 XX"、"聊聊 XX"、"XX 的重要性"这种万能标题。
+- 不要标点、书名号、引号、emoji、Markdown。
+- ${count} 个标题话题要分散，别都挤在同一个子话题里。
+- 不要直接抄样本里的标题；样本只用来判断方向和说话风格。
 
-参考差距（必须像【好】那样写，不能像【坏】那样写）：
-【坏】"今天聊聊创业的心态。很多创业者都会遇到困难，关键是要保持积极的认知，相信自己一定能突破。"
-【好】"我认识一个开烧烤店的老哥，去年冬天店里一晚上只来过两桌客人，他在后厨蹲着哭。三个月后这家店外面排队两小时。他做的不是味道，是把每个回头客的口味记在一个破本子上，第二次去直接报名字上菜。"
+输出格式严格如下（每行一个标题，共 ${count} 行，除此之外不输出任何其他文字）：
+1. <标题1>
+2. <标题2>
+...`;
 
-输出格式严格如下（除此之外不输出任何文字、说明、Markdown）：
-TITLE: <标题>
----
-<内容>`;
-
-  const user = `${ctx}已有稿件样本如下，请据此生成一篇全新的稿件创意：\n\n${sampleBlock}`;
+  const user = `${ctx}已有稿件样本如下，请据此生成 ${count} 个全新的口播主题标题：\n\n${sampleBlock}`;
 
   const raw = (
     await openaiChat({
@@ -159,28 +155,25 @@ TITLE: <标题>
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      max_tokens: 800,
+      max_tokens: 600,
     })
   ).trim();
 
-  // Parse "TITLE: ...\n---\n<body>"
-  const m = raw.match(/^TITLE:\s*(.+?)\s*\n---\s*\n([\s\S]+)$/);
-  if (m) {
-    let title = m[1].trim();
-    title = title.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
-    const tchars = Array.from(title);
-    if (tchars.length > 10) title = tchars.slice(0, 10).join("");
-    const content = tightenWhitespace(m[2]);
-    return { title, content };
+  const titles: string[] = [];
+  for (const line of raw.split("\n")) {
+    let t = line.trim();
+    if (!t) continue;
+    // Strip leading "1. ", "1) ", "1、", "- ", "* " etc.
+    t = t.replace(/^\s*(?:\d+[.\)、]|[-*•])\s*/, "").trim();
+    // Strip surrounding quotes/brackets/punctuation.
+    t = t.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
+    if (!t) continue;
+    const chars = Array.from(t);
+    if (chars.length > 12) t = chars.slice(0, 12).join("");
+    titles.push(t);
+    if (titles.length >= count) break;
   }
-  // Fallback: treat first line as title.
-  const lines = raw.split("\n");
-  const firstLine = lines[0].replace(/^TITLE:\s*/i, "").trim();
-  const rest = tightenWhitespace(
-    lines.slice(1).join("\n").replace(/^---\s*\n?/m, ""),
-  );
-  const ft = Array.from(firstLine).slice(0, 10).join("");
-  return { title: ft, content: rest || tightenWhitespace(raw) };
+  return titles;
 }
 
 export async function generateTitle(content: string): Promise<string> {
