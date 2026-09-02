@@ -9,6 +9,7 @@ import { ScriptsHeader } from "./_components/scripts-header";
 import { ScriptsFilters, type SortKey } from "./_components/scripts-filters";
 import { ScriptListItem } from "./_components/script-list-item";
 import { PullToRefresh } from "./_components/pull-to-refresh";
+import { InspireLauncher } from "./_components/inspire-launcher";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,7 @@ export default async function ScriptsPage({
         )}
         </div>
       </PullToRefresh>
+      <InspireLauncher />
     </>
   );
 }

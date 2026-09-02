@@ -170,6 +170,20 @@ function StatusMultiSelect({
       </button>
       {open && (
         <div className="absolute z-20 mt-1 min-w-[10rem] rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
+          <label className="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = !allSelected && value.length > 0;
+              }}
+              onChange={() =>
+                onChange(allSelected ? [] : [...SCRIPT_STATUSES])
+              }
+              className="accent-neutral-900 dark:accent-neutral-100"
+            />
+            全部
+          </label>
           {SCRIPT_STATUSES.map((s) => (
             <label
               key={s}

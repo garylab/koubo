@@ -134,7 +134,7 @@ export async function inspireTitles(opts: {
 - 必须具体、有钩子，二选一：
   (a) 一个具体的人/事/场景（"外卖小哥的破本子"、"上海只开三小时的面馆"）；
   (b) 一个具体的数字、对比或反常识的事实（"1400 万人在做这件事"、"做了 10 年才发现的错"）。
-- 每个标题最多 12 个中文字。
+- 每个标题最多 22 个中文字。
 - 禁止使用抽象词：心态、格局、底层逻辑、本质、认知、思考、启示、感悟、价值、意义、重要性、不可或缺、提升自我。
 - 禁止"我的思考"、"关于 XX"、"聊聊 XX"、"XX 的重要性"这种万能标题。
 - 不要标点、书名号、引号、emoji、Markdown。
@@ -169,7 +169,7 @@ export async function inspireTitles(opts: {
     t = t.replace(/^[\s"'`《「『（(【\[]+|[\s"'`》」』）)】\]。．.！!？?]+$/g, "");
     if (!t) continue;
     const chars = Array.from(t);
-    if (chars.length > 12) t = chars.slice(0, 12).join("");
+    if (chars.length > 22) t = chars.slice(0, 22).join("");
     titles.push(t);
     if (titles.length >= count) break;
   }
