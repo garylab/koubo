@@ -8,8 +8,8 @@ export const EMBED_MODEL = "@cf/baai/bge-m3" as const;
 
 // === Chat: OpenAI ===
 // Override via OPENAI_CHAT_MODEL / OPENAI_TITLE_MODEL secrets without redeploy.
-const DEFAULT_CHAT_MODEL = "gpt-5.5";
-const DEFAULT_TITLE_MODEL = "gpt-5.5";
+const DEFAULT_CHAT_MODEL = "gpt-5-mini";
+const DEFAULT_TITLE_MODEL = "gpt-5-mini";
 
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
@@ -38,7 +38,7 @@ async function openaiChat(opts: {
   temperature?: number;
   max_tokens?: number;
 }): Promise<string> {
-  const { max_tokens, temperature: _temperature, ...rest } = opts;
+  const { max_tokens, ...rest } = opts;
   const res = await fetch(OPENAI_CHAT_URL, {
     method: "POST",
     headers: {
