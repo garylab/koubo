@@ -230,9 +230,16 @@ export function ScriptEditor({
   }
 
   async function runAi(mode: AiMode | "custom" = aiMode) {
-    if (!content.trim()) return;
+    // Seed can be either the body or, when the body is empty, the title —
+    // lets the user turn an inspire-generated title into a draft.
+    const seed = content.trim() || title.trim();
+    if (!seed) return;
     if (mode === "custom" && !customPrompt.trim()) return;
-    setAiMode(mode);
+    // Modes that only make sense on existing prose fall back to "expand"
+    // when the user hasn't written any body yet.
+    const effectiveMode: AiMode | "custom" =
+      !content.trim() && mode !== "custom" ? "expand" : mode;
+    setAiMode(effectiveMode);
     setAiMenuOpen(false);
     setCustomOpen(false);
     setAiOpen(true);
@@ -244,9 +251,9 @@ export function ScriptEditor({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          mode === "custom"
-            ? { content, mode, customPrompt: customPrompt.trim() }
-            : { content, mode },
+          effectiveMode === "custom"
+            ? { content: seed, mode: effectiveMode, customPrompt: customPrompt.trim() }
+            : { content: seed, mode: effectiveMode },
         ),
       });
       const j = (await res.json().catch(() => null)) as
@@ -433,7 +440,7 @@ export function ScriptEditor({
             <button
               type="button"
               onClick={() => setAiMenuOpen((v) => !v)}
-              disabled={!hasContent || aiBusy}
+              disabled={(!hasContent && !title.trim()) || aiBusy}
               className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 text-white px-4 h-10 text-sm font-medium shadow-lg shadow-violet-600/30 hover:bg-violet-700 disabled:opacity-40"
             >
               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" aria-hidden>

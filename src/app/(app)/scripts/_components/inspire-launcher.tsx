@@ -99,7 +99,7 @@ export function InspireLauncher() {
         onClick={openSheet}
         aria-label="AI 启发"
         className="fixed right-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-violet-600 text-white px-4 h-10 text-sm font-medium shadow-lg shadow-violet-600/30 hover:bg-violet-700"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 7.5rem)" }}
       >
         <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" aria-hidden>
           <path

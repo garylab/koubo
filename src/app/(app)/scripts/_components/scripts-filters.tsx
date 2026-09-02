@@ -100,9 +100,15 @@ export function ScriptsFilters({
       <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-4">状态</span>
       <StatusMultiSelect
         value={statuses}
-        onChange={(next) =>
-          update({ s: next.length === SCRIPT_STATUSES.length ? null : next.join(",") })
-        }
+        onChange={(next) => {
+          const s =
+            next.length === SCRIPT_STATUSES.length
+              ? "all"
+              : next.length === 0
+                ? "none"
+                : next.join(",");
+          update({ s });
+        }}
       />
 
       <div className="ml-auto flex items-center gap-1">
@@ -131,6 +137,9 @@ function StatusMultiSelect({
   onChange: (next: ScriptStatus[]) => void;
 }) {
   const [open, setOpen] = useState(false);
+  // Draft holds pending changes while the panel is open; only committed to
+  // the URL when the user clicks 确定.
+  const [draft, setDraft] = useState<ScriptStatus[]>(value);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -142,19 +151,31 @@ function StatusMultiSelect({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  // Reset draft to the committed value each time the panel opens.
+  useEffect(() => {
+    if (open) setDraft(value);
+  }, [open, value]);
+
   function toggle(s: ScriptStatus) {
-    if (value.includes(s)) onChange(value.filter((x) => x !== s));
-    else onChange([...value, s]);
+    setDraft((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+    );
   }
 
-  const allSelected = value.length === SCRIPT_STATUSES.length;
-  const label = allSelected
+  const draftAll = draft.length === SCRIPT_STATUSES.length;
+  const committedAll = value.length === SCRIPT_STATUSES.length;
+  const label = committedAll
     ? "全部"
     : value.length === 0
       ? "无"
       : value.length === 1
         ? SCRIPT_STATUS_LABEL[value[0]]
         : `${value.length} 个`;
+
+  function apply() {
+    onChange(draft);
+    setOpen(false);
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -169,16 +190,16 @@ function StatusMultiSelect({
         </svg>
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 min-w-[10rem] rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
+        <div className="absolute z-20 mt-1 min-w-[11rem] rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-md py-1">
           <label className="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
             <input
               type="checkbox"
-              checked={allSelected}
+              checked={draftAll}
               ref={(el) => {
-                if (el) el.indeterminate = !allSelected && value.length > 0;
+                if (el) el.indeterminate = !draftAll && draft.length > 0;
               }}
               onChange={() =>
-                onChange(allSelected ? [] : [...SCRIPT_STATUSES])
+                setDraft(draftAll ? [] : [...SCRIPT_STATUSES])
               }
               className="accent-neutral-900 dark:accent-neutral-100"
             />
@@ -191,13 +212,29 @@ function StatusMultiSelect({
             >
               <input
                 type="checkbox"
-                checked={value.includes(s)}
+                checked={draft.includes(s)}
                 onChange={() => toggle(s)}
                 className="accent-neutral-900 dark:accent-neutral-100"
               />
               {SCRIPT_STATUS_LABEL[s]}
             </label>
           ))}
+          <div className="flex items-center justify-end gap-1 px-2 pt-1.5 pb-1 border-t border-neutral-200 dark:border-neutral-800 mt-1">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="px-2.5 py-1 text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              onClick={apply}
+              className="rounded bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 px-3 py-1 text-xs font-medium"
+            >
+              确定
+            </button>
+          </div>
         </div>
       )}
     </div>

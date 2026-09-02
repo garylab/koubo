@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db/client";
 import { collection, script } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/session";
 import { deriveTitle } from "@/lib/script-title";
-import { isScriptStatus, type ScriptStatus } from "@/lib/script-status";
+import { SCRIPT_STATUSES, isScriptStatus, type ScriptStatus } from "@/lib/script-status";
 import { ScriptsHeader } from "./_components/scripts-header";
 import { ScriptsFilters, type SortKey } from "./_components/scripts-filters";
 import { ScriptListItem } from "./_components/script-list-item";
@@ -26,9 +26,19 @@ export default async function ScriptsPage({
   const activeCollectionId =
     sp.c && Number.isInteger(Number(sp.c)) ? Number(sp.c) : null;
 
-  const statuses: ScriptStatus[] = sp.s
-    ? sp.s.split(",").filter(isScriptStatus)
-    : (["draft", "unrecorded", "recording", "recorded"] as ScriptStatus[]);
+  // s query param:
+  //   undefined → default subset (everything except published)
+  //   "all"     → every status
+  //   "none"    → empty (show nothing)
+  //   csv       → parsed list
+  const statuses: ScriptStatus[] =
+    sp.s === undefined
+      ? (["draft", "unrecorded", "recording", "recorded"] as ScriptStatus[])
+      : sp.s === "all"
+        ? [...SCRIPT_STATUSES]
+        : sp.s === "none"
+          ? []
+          : sp.s.split(",").filter(isScriptStatus);
 
   const sort: SortKey = sp.sort === "updated" ? "updated" : "created";
   const orderCol = sort === "updated" ? script.updatedAt : script.createdAt;
