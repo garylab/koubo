@@ -146,10 +146,7 @@ export async function inspireTitles(opts: {
 - ${count} 个话题必须分散，别都挤在一个子话题里。
 - 不要抄样本里的句子，样本只用来判断话题方向和说话风格。
 
-输出格式严格如下（每行一个标题，共 ${count} 行，不要编号、不要 Markdown、不要任何其他文字）：
-<标题1>
-<标题2>
-...`;
+输出格式：直接输出 ${count} 行，每行一个标题，标题之间只有换行。不要编号、不要项目符号、不要 Markdown、不要任何其他前后文字或说明。`;
 
   const user = `${ctx}已有稿件样本如下，请据此生成 ${count} 个全新的口播主题标题：\n\n${sampleBlock}`;
 
@@ -160,7 +157,7 @@ export async function inspireTitles(opts: {
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-      max_tokens: 600,
+      max_tokens: 2500,
     })
   ).trim();
 
